@@ -7,6 +7,7 @@ import {
   timestamp,
   integer,
   check,
+  unique,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -41,6 +42,7 @@ export const meals = pgTable(
     proteins: integer(),
     notes: text(),
     isAiEstimated: boolean("is_ai_estimated").notNull().default(false),
+    isCompleted: boolean("is_completed").notNull().default(false),
   },
   (table) => [
     check(
@@ -52,4 +54,19 @@ export const meals = pgTable(
       sql`${table.mealType} IN ('Colazione', 'Spuntino Mattina', 'Pranzo', 'Spuntino Pomeriggio', 'Cena')`
     ),
   ]
+);
+
+export const userGoals = pgTable(
+  "user_goals",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: text("user_id").notNull(),
+    dailyKcal: integer("daily_kcal"),
+    dailyCarbs: integer("daily_carbs"),
+    dailyFats: integer("daily_fats"),
+    dailyProteins: integer("daily_proteins"),
+    dailyWater: integer("daily_water").notNull().default(8),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [unique("user_goals_user_id_unique").on(table.userId)]
 );

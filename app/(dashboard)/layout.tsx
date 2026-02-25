@@ -1,6 +1,7 @@
 import { BottomNav } from "@/components/bottom-nav";
 import { OfflineBanner } from "@/components/offline-banner";
 import { AuthGuard } from "@/components/auth-guard";
+import { OnboardingWrapper } from "@/components/onboarding-wrapper";
 
 export default function DashboardLayout({
   children,
@@ -20,6 +21,7 @@ export default function DashboardLayout({
           }}
         />
         <BottomNav />
+        <OnboardingWrapper />
       </div>
     </AuthGuard>
   );

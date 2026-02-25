@@ -73,14 +73,25 @@ export function BottomNav() {
                   layoutId="nav-pill"
                   className="absolute inset-0 rounded-2xl"
                   style={{
-                    background: "rgba(45, 159, 143, 0.12)",
-                    boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 3px rgba(45, 159, 143, 0.08)",
+                    background: "var(--nav-pill)",
+                    boxShadow: "inset 0 1px 0 var(--nav-pill-shadow), 0 1px 3px var(--glass-shadow)",
                   }}
                   transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                 />
               )}
-              <span className="relative z-10">{item.icon(isActive)}</span>
-              <span className="relative z-10">{item.label}</span>
+              <motion.span
+                className="relative z-10"
+                animate={isActive ? { y: [0, -3, 0] } : { y: 0 }}
+                transition={isActive ? { duration: 0.35, ease: "easeOut" } : {}}
+              >
+                {item.icon(isActive)}
+              </motion.span>
+              <motion.span
+                className="relative z-10"
+                whileTap={{ scale: 0.92 }}
+              >
+                {item.label}
+              </motion.span>
             </Link>
           );
         })}

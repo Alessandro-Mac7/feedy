@@ -23,42 +23,7 @@ const FEATURES = [
     title: "Donut interattivo",
     description: "Tocca il grafico per esplorare le % di ogni macronutriente.",
   },
-  {
-    icon: "💧",
-    title: "Tracker acqua",
-    description: "Monitora i tuoi 2L giornalieri con una colonna animata.",
-  },
-  {
-    icon: "✏️",
-    title: "Modifica libera",
-    description: "Aggiungi, modifica ed elimina pasti come vuoi.",
-  },
 ];
-
-const DAYS_PREVIEW = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
-
-function FloatingCard({
-  children,
-  className,
-  delay = 0,
-  y = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-  y?: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 + y }}
-      animate={{ opacity: 1, y }}
-      transition={{ delay, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 const SCREENSHOTS = [
   {
@@ -434,44 +399,6 @@ export default function LandingPage() {
           </motion.p>
         </div>
 
-        {/* Floating preview cards — staggered around hero */}
-        <div className="pointer-events-none absolute inset-0 hidden sm:block">
-          <FloatingCard
-            delay={0.7}
-            y={-5}
-            className="absolute top-[18%] right-[5%] rotate-3"
-          >
-            <div className="glass-strong rounded-2xl px-4 py-3 shadow-lg">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🥗</span>
-                <div>
-                  <p className="text-xs font-semibold text-foreground">Pranzo</p>
-                  <p className="text-[10px] text-foreground-muted">Insalata di quinoa</p>
-                </div>
-              </div>
-              <div className="mt-2 flex gap-1.5">
-                <span className="rounded-lg bg-[#4A8AC4]/12 px-1.5 py-0.5 text-[9px] font-bold text-[#4A8AC4]">C 45g</span>
-                <span className="rounded-lg bg-[#C9A033]/12 px-1.5 py-0.5 text-[9px] font-bold text-[#C9A033]">G 12g</span>
-                <span className="rounded-lg bg-[#B86B4F]/12 px-1.5 py-0.5 text-[9px] font-bold text-[#B86B4F]">P 28g</span>
-              </div>
-            </div>
-          </FloatingCard>
-
-          <FloatingCard
-            delay={0.9}
-            y={8}
-            className="absolute bottom-[25%] left-[3%] -rotate-2"
-          >
-            <div className="glass rounded-2xl px-4 py-3 shadow-lg">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm">💧</span>
-                <p className="text-[10px] font-semibold text-foreground-muted uppercase tracking-wider">Acqua</p>
-              </div>
-              <p className="text-lg font-bold tabular-nums" style={{ color: "#4A9BD9" }}>1.5L <span className="text-[10px] text-foreground-muted font-normal">/ 2L</span></p>
-            </div>
-          </FloatingCard>
-        </div>
-
         {/* Scroll indicator */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -489,186 +416,6 @@ export default function LandingPage() {
           </motion.div>
         </motion.div>
       </motion.section>
-
-      {/* ── PREVIEW MOCKUP ── */}
-      <section className="relative px-6 pb-24">
-        <div className="mx-auto max-w-sm">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="glass-strong rounded-[2rem] p-5 shadow-2xl shadow-primary/8"
-          >
-            {/* Mock status bar */}
-            <div className="mb-4 flex items-center justify-between text-[10px] text-foreground-muted/60">
-              <span className="font-semibold">9:41</span>
-              <div className="flex gap-1">
-                <div className="h-1.5 w-3 rounded-sm bg-foreground-muted/30" />
-                <div className="h-1.5 w-3 rounded-sm bg-foreground-muted/30" />
-                <div className="h-1.5 w-3 rounded-sm bg-foreground-muted/30" />
-              </div>
-            </div>
-
-            {/* Day tabs mini */}
-            <div className="mb-4 flex justify-center gap-1">
-              {DAYS_PREVIEW.map((d, i) => (
-                <div
-                  key={d}
-                  className={`rounded-xl px-2.5 py-1.5 text-[10px] font-semibold transition-all ${
-                    i === 2
-                      ? "bg-primary text-white shadow-md shadow-primary/20"
-                      : "text-foreground-muted/50"
-                  }`}
-                >
-                  {d}
-                </div>
-              ))}
-            </div>
-
-            {/* Summary bar — matches DailySummaryCard */}
-            <div className="glass-strong rounded-2xl px-4 py-3 mb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <p className="font-display text-lg text-foreground">Mercoledì</p>
-                  <div className="flex items-center gap-1">
-                    <div className="flex -space-x-0.5">
-                      {[true, true, true, false, false].map((f, i) => (
-                        <div key={i} className={`h-1.5 w-1.5 rounded-full border border-white/40 ${f ? "bg-primary" : "bg-white/25"}`} />
-                      ))}
-                    </div>
-                    <span className="text-[9px] font-semibold text-foreground-muted tabular-nums">3/5</span>
-                  </div>
-                </div>
-                <span className="glass-subtle rounded-lg px-2 py-0.5 text-[9px] font-semibold text-foreground-muted">
-                  Dieta Mediterranea
-                </span>
-              </div>
-            </div>
-
-            {/* 2-column grid: Donut + Water — matches app layout */}
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              {/* Donut card */}
-              <div className="glass rounded-xl p-3 flex flex-col items-center gap-2">
-                <div className="relative">
-                  <svg width="60" height="60" viewBox="0 0 60 60">
-                    <circle cx="30" cy="30" r="22" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="6" />
-                    <circle cx="30" cy="30" r="22" fill="none" stroke="#4A8AC4" strokeWidth="6" strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 22 * 0.46} ${2 * Math.PI * 22 * 0.54}`}
-                      transform="rotate(-90 30 30)" />
-                    <circle cx="30" cy="30" r="22" fill="none" stroke="#C9A033" strokeWidth="6" strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 22 * 0.26} ${2 * Math.PI * 22 * 0.74}`}
-                      strokeDashoffset={`${-(2 * Math.PI * 22 * 0.48)}`}
-                      transform="rotate(-90 30 30)" />
-                    <circle cx="30" cy="30" r="22" fill="none" stroke="#B86B4F" strokeWidth="6" strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 22 * 0.22} ${2 * Math.PI * 22 * 0.78}`}
-                      strokeDashoffset={`${-(2 * Math.PI * 22 * 0.76)}`}
-                      transform="rotate(-90 30 30)" />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-bold text-foreground">1.847</span>
-                    <span className="text-[7px] text-foreground-muted">kcal</span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-center gap-0.5">
-                  {[
-                    { label: "Carb", g: "210g", pct: "48%", color: "#4A8AC4" },
-                    { label: "Grassi", g: "58g", pct: "28%", color: "#C9A033" },
-                    { label: "Prot", g: "92g", pct: "24%", color: "#B86B4F" },
-                  ].map((m) => (
-                    <div key={m.label} className="flex items-center gap-1">
-                      <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: m.color }} />
-                      <span className="text-[8px] font-semibold text-foreground">{m.label}</span>
-                      <span className="text-[8px] text-foreground-muted tabular-nums">{m.g}</span>
-                      <span className="text-[7px] font-bold tabular-nums" style={{ color: m.color }}>{m.pct}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Water tracker card */}
-              <div className="glass rounded-xl p-3 flex flex-col items-center gap-1.5">
-                <div className="flex items-center gap-1">
-                  <span className="text-xs">💧</span>
-                  <span className="text-[8px] font-semibold text-foreground-muted uppercase tracking-wider">Drink Tracker</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/30 text-foreground-muted/40">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                  </div>
-                  <svg width="28" height="48" viewBox="0 0 28 48">
-                    <defs>
-                      <clipPath id="mock-glass-clip">
-                        <polygon points="2,2 26,2 22,46 6,46" />
-                      </clipPath>
-                      <linearGradient id="mock-glass-grad" x1="0" y1="1" x2="0" y2="0">
-                        <stop offset="0%" stopColor="#3B8DD4" />
-                        <stop offset="100%" stopColor="#7BC4E8" />
-                      </linearGradient>
-                    </defs>
-                    <polygon points="2,2 26,2 22,46 6,46" fill="rgba(74,155,217,0.04)" stroke="rgba(74,155,217,0.2)" strokeWidth="1" strokeLinejoin="round" />
-                    <g clipPath="url(#mock-glass-clip)">
-                      <rect x="0" y="16" width="28" height="32" fill="url(#mock-glass-grad)" opacity="0.8" />
-                    </g>
-                  </svg>
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/30 text-foreground-muted/40">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                  </div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-sm font-bold tabular-nums" style={{ color: "#4A9BD9" }}>6/8</span>
-                  <span className="text-[8px] text-foreground-muted/60">bicchieri · 1.5L</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Meal cards mini — matches MealCard component */}
-            {[
-              { emoji: "☕", type: "Colazione", food: "Yogurt greco, muesli, mirtilli", highlight: false, ai: true, macros: { c: 45, g: 12, p: 28 } },
-              { emoji: "🥗", type: "Pranzo", food: "Insalata di quinoa con avocado", highlight: true, ai: false, macros: null },
-              { emoji: "🍎", type: "Spuntino", food: "Mela e mandorle", highlight: false, ai: false, macros: null },
-            ].map((m) => (
-              <div
-                key={m.type}
-                className={`rounded-2xl p-3 mb-2 ${m.highlight ? "glass-accent" : "glass"}`}
-              >
-                <div className="flex items-start gap-2.5">
-                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${m.highlight ? "bg-accent/12" : "bg-white/40"}`}>
-                    {m.emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-semibold text-foreground">{m.type}</p>
-                      {m.highlight && (
-                        <span className="flex items-center gap-0.5 rounded-full bg-accent/15 px-1.5 py-0.5 text-[7px] font-bold text-accent uppercase tracking-wider pulse-glow">
-                          <span className="h-1 w-1 rounded-full bg-accent" />
-                          Ora
-                        </span>
-                      )}
-                      {m.ai && (
-                        <span className="rounded-full bg-violet-500/10 px-1 py-0.5 text-[7px] font-bold text-violet-600">AI</span>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-foreground-muted truncate mt-0.5">{m.food}</p>
-                    {m.macros && (
-                      <div className="flex gap-1 mt-1.5">
-                        <span className="rounded-md bg-[#4A8AC4]/10 px-1.5 py-0.5 text-[8px] font-bold text-[#4A8AC4]">C {m.macros.c}g</span>
-                        <span className="rounded-md bg-[#C9A033]/10 px-1.5 py-0.5 text-[8px] font-bold text-[#C9A033]">G {m.macros.g}g</span>
-                        <span className="rounded-md bg-[#B86B4F]/10 px-1.5 py-0.5 text-[8px] font-bold text-[#B86B4F]">P {m.macros.p}g</span>
-                      </div>
-                    )}
-                    {!m.macros && !m.highlight && (
-                      <div className="mt-1.5">
-                        <span className="glass-subtle rounded-lg px-2 py-1 text-[8px] font-semibold text-primary">Stima Macro con AI</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
 
       {/* ── FEATURES ── */}
       <section className="relative px-6 pb-24">
@@ -688,7 +435,7 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {FEATURES.map((f, i) => (
               <motion.div
                 key={f.title}
@@ -700,13 +447,9 @@ export default function LandingPage() {
                   duration: 0.6,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className={`glass rounded-2xl p-4 hover:shadow-lg hover:shadow-primary/6 transition-shadow ${
-                  i === FEATURES.length - 1 && FEATURES.length % 2 !== 0
-                    ? "col-span-2 max-w-[65%] mx-auto"
-                    : ""
-                }`}
+                className="glass rounded-2xl p-4 hover:shadow-lg hover:shadow-primary/6 transition-shadow"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/50 text-xl mb-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-xl mb-3">
                   {f.icon}
                 </div>
                 <h3 className="font-semibold text-sm text-foreground mb-1">

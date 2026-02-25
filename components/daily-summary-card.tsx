@@ -10,9 +10,7 @@ interface DailySummaryCardProps {
 }
 
 export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCardProps) {
-  const completedMeals = meals.filter(
-    (m) => m.carbs !== null || m.fats !== null || m.proteins !== null
-  ).length;
+  const completedMeals = meals.filter((m) => m.isCompleted).length;
 
   return (
     <motion.div

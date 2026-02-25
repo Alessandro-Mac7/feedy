@@ -31,7 +31,7 @@ export async function PATCH(
   }
 
   const body = await req.json();
-  const { foods, carbs, fats, proteins, notes } = body;
+  const { foods, carbs, fats, proteins, notes, isCompleted } = body;
 
   const macrosChanged =
     carbs !== undefined ||
@@ -46,6 +46,7 @@ export async function PATCH(
       ...(fats !== undefined && { fats }),
       ...(proteins !== undefined && { proteins }),
       ...(notes !== undefined && { notes }),
+      ...(isCompleted !== undefined && { isCompleted }),
       ...(macrosChanged && { isAiEstimated: false }),
     })
     .where(eq(meals.id, id))
