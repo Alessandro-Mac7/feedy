@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { DayTabs } from "@/components/day-tabs";
 import { MealCard } from "@/components/meal-card";
 import { DailySummaryCard } from "@/components/daily-summary-card";
+import { MacroDonutCard } from "@/components/macro-donut-card";
+import { WaterTrackerCard } from "@/components/water-tracker-card";
 import { SkeletonMealCard } from "@/components/skeleton-meal-card";
 import { getTodayDay, getCurrentMealType } from "@/lib/utils";
 import { MEAL_TYPES, type Day, type Meal, type Diet, type MealType } from "@/types";
@@ -180,6 +182,11 @@ export default function OggiPage() {
             dayLabel={selectedDay}
             dietName={diet.dietName}
           />
+
+          <div className="grid grid-cols-2 gap-3">
+            <MacroDonutCard meals={dayMeals} />
+            <WaterTrackerCard dayLabel={selectedDay} />
+          </div>
 
           {dayMeals.length === 0 ? (
             <div className="glass rounded-2xl py-12 text-center">
