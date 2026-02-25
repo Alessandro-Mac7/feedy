@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { parseCSV, parseJSON } from "@/lib/parsers/csv";
 import type { ParseResult, ParsedMeal } from "@/types";
 import { MEAL_EMOJI } from "@/types";
+import { useToast } from "@/components/toast";
 
 interface DietUploadProps {
   onUploaded: () => void;
@@ -20,6 +21,7 @@ export function DietUpload({ onUploaded }: DietUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -70,9 +72,12 @@ export function DietUpload({ onUploaded }: DietUploadProps) {
       setParseResult(null);
       setIsOpen(false);
       if (fileRef.current) fileRef.current.value = "";
+      toast("Dieta caricata con successo!", "success");
       onUploaded();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Errore sconosciuto.");
+      const msg = err instanceof Error ? err.message : "Errore sconosciuto.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setUploading(false);
     }

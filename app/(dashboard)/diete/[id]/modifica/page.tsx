@@ -8,6 +8,7 @@ import { DayTabs } from "@/components/day-tabs";
 import { EditableMealCard } from "@/components/editable-meal-card";
 import { AddMealForm } from "@/components/add-meal-form";
 import { getTodayDay } from "@/lib/utils";
+import { PageLoader } from "@/components/page-loader";
 import { MEAL_TYPES, type Day, type Meal, type Diet, type MealType } from "@/types";
 
 interface DietWithMeals extends Diet {
@@ -48,19 +49,7 @@ export default function ModificaDietaPage() {
       ) ?? [];
 
   if (loading) {
-    return (
-      <div className="space-y-5">
-        <div className="h-8 w-48 rounded-xl skeleton-shimmer" />
-        <div className="flex gap-2">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="h-12 w-14 rounded-2xl skeleton-shimmer" />
-          ))}
-        </div>
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-28 rounded-2xl skeleton-shimmer" />
-        ))}
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (notFound || !diet) {
