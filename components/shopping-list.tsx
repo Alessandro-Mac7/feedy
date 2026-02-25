@@ -144,127 +144,139 @@ export function ShoppingList({ meals, open, onClose }: ShoppingListProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-[150] bg-background/95 backdrop-blur overflow-y-auto"
+          className="fixed inset-0 z-[150] flex flex-col bg-background/95 backdrop-blur"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="min-h-full px-4 py-6 pb-28"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="font-display text-xl text-foreground">Lista della spesa</h2>
-                <p className="text-xs text-foreground-muted mt-0.5">
-                  {foodItems.length} ingredienti &middot; {foodItems.filter((i) => checked.has(i.id)).length} completati
-                </p>
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="px-4 py-6 pb-4"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="font-display text-xl text-foreground">Lista della spesa</h2>
+                  <p className="text-xs text-foreground-muted mt-0.5">
+                    {foodItems.length} ingredienti &middot; {foodItems.filter((i) => checked.has(i.id)).length} completati
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl glass-subtle text-foreground-muted hover:text-foreground transition-colors"
+                  aria-label="Chiudi"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
               </div>
-              <button
+
+              {/* Food items grouped by category */}
+              {grouped.length === 0 ? (
+                <div className="glass rounded-2xl py-12 flex flex-col items-center text-center">
+                  <p className="text-foreground-muted">Nessun ingrediente trovato</p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {grouped.map(([category, items], catIdx) => (
+                    <motion.div
+                      key={category}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: catIdx * 0.05 }}
+                    >
+                      <h3 className="flex items-center gap-2 text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-2 px-1">
+                        <span>{CATEGORY_EMOJI[category] ?? ""}</span>
+                        <span>{category}</span>
+                        <span className="ml-auto text-[10px] font-normal normal-case tracking-normal opacity-60">
+                          {items.length}
+                        </span>
+                      </h3>
+                      <div className="glass rounded-2xl divide-y divide-border/50 overflow-hidden">
+                        {items.map((item) => {
+                          const isChecked = checked.has(item.id);
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => toggleItem(item.id)}
+                              className="flex items-center gap-3 w-full px-4 py-3 text-left transition-colors hover:bg-surface-hover active:bg-surface-hover"
+                            >
+                              <motion.div
+                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                                  isChecked
+                                    ? "border-primary bg-primary"
+                                    : "border-foreground-muted/30"
+                                }`}
+                                whileTap={{ scale: 0.85 }}
+                              >
+                                {isChecked && (
+                                  <motion.svg
+                                    width="10"
+                                    height="10"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="white"
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    initial={{ pathLength: 0 }}
+                                    animate={{ pathLength: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </motion.svg>
+                                )}
+                              </motion.div>
+                              <span
+                                className={`text-sm transition-all ${
+                                  isChecked
+                                    ? "text-foreground-muted line-through opacity-50"
+                                    : "text-foreground"
+                                }`}
+                              >
+                                {item.display}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Fixed bottom bar */}
+          <div className="shrink-0 glass-strong border-t border-glass-border px-4 py-3 safe-area-bottom">
+            <div className="flex items-center gap-3">
+              <motion.button
+                type="button"
+                onClick={handleCopy}
+                whileTap={{ scale: 0.96 }}
+                className="flex-1 rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary-light transition-all flex items-center justify-center gap-2"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                Copia lista
+              </motion.button>
+              <motion.button
                 type="button"
                 onClick={onClose}
-                className="flex h-9 w-9 items-center justify-center rounded-xl glass-subtle text-foreground-muted hover:text-foreground transition-colors"
-                aria-label="Chiudi"
+                whileTap={{ scale: 0.96 }}
+                className="rounded-2xl glass px-5 py-3 text-sm font-semibold text-foreground-muted hover:text-foreground transition-colors"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
+                Chiudi
+              </motion.button>
             </div>
-
-            {/* Food items grouped by category */}
-            {grouped.length === 0 ? (
-              <div className="glass rounded-2xl py-12 flex flex-col items-center text-center">
-                <p className="text-foreground-muted">Nessun ingrediente trovato</p>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                {grouped.map(([category, items], catIdx) => (
-                  <motion.div
-                    key={category}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: catIdx * 0.05 }}
-                  >
-                    <h3 className="flex items-center gap-2 text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-2 px-1">
-                      <span>{CATEGORY_EMOJI[category] ?? ""}</span>
-                      <span>{category}</span>
-                      <span className="ml-auto text-[10px] font-normal normal-case tracking-normal opacity-60">
-                        {items.length}
-                      </span>
-                    </h3>
-                    <div className="glass rounded-2xl divide-y divide-border/50 overflow-hidden">
-                      {items.map((item) => {
-                        const isChecked = checked.has(item.id);
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => toggleItem(item.id)}
-                            className="flex items-center gap-3 w-full px-4 py-3 text-left transition-colors hover:bg-surface-hover active:bg-surface-hover"
-                          >
-                            <motion.div
-                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                                isChecked
-                                  ? "border-primary bg-primary"
-                                  : "border-foreground-muted/30"
-                              }`}
-                              whileTap={{ scale: 0.85 }}
-                            >
-                              {isChecked && (
-                                <motion.svg
-                                  width="10"
-                                  height="10"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="white"
-                                  strokeWidth="3"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  initial={{ pathLength: 0 }}
-                                  animate={{ pathLength: 1 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  <polyline points="20 6 9 17 4 12" />
-                                </motion.svg>
-                              )}
-                            </motion.div>
-                            <span
-                              className={`text-sm transition-all ${
-                                isChecked
-                                  ? "text-foreground-muted line-through opacity-50"
-                                  : "text-foreground"
-                              }`}
-                            >
-                              {item.display}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </motion.div>
-
-          {/* Sticky bottom bar */}
-          <div className="fixed bottom-0 left-0 right-0 z-[151] p-4 pb-6 bg-gradient-to-t from-background via-background/90 to-transparent">
-            <motion.button
-              type="button"
-              onClick={handleCopy}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              className="w-full rounded-2xl bg-primary px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary-light transition-all flex items-center justify-center gap-2"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-              Copia lista
-            </motion.button>
           </div>
         </motion.div>
       )}
