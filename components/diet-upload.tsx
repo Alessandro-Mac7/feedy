@@ -200,7 +200,7 @@ export function DietUpload({ onUploaded }: DietUploadProps) {
               {parseResult && parseResult.warnings.length > 0 && parseResult.errors.length === 0 && (
                 <div className="rounded-xl glass-subtle border-amber-500/20 p-3.5">
                   <p className="text-sm font-semibold text-amber-700 mb-1">Avvisi:</p>
-                  <ul className="list-disc pl-5 text-xs text-amber-600 space-y-0.5">
+                  <ul className="list-disc pl-5 text-xs text-amber-600 space-y-0.5 max-h-28 overflow-y-auto">
                     {parseResult.warnings.map((w, i) => (
                       <li key={i}>{w}</li>
                     ))}
