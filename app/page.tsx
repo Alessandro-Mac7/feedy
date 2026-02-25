@@ -99,28 +99,6 @@ export default function LandingPage() {
         style={{ opacity: heroOpacity, scale: heroScale }}
         className="relative flex min-h-[100svh] flex-col items-center justify-center px-6 pb-20 pt-12"
       >
-        {/* Background blobs */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <motion.div
-            animate={{ x: [0, 15, 0], y: [0, -10, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -left-32 top-[10%] h-[500px] w-[500px] rounded-full opacity-40"
-            style={{ background: "radial-gradient(circle, rgba(45,159,143,0.25) 0%, transparent 70%)" }}
-          />
-          <motion.div
-            animate={{ x: [0, -20, 0], y: [0, 15, 0] }}
-            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -right-24 top-[30%] h-[400px] w-[400px] rounded-full opacity-30"
-            style={{ background: "radial-gradient(circle, rgba(59,181,164,0.22) 0%, transparent 70%)" }}
-          />
-          <motion.div
-            animate={{ x: [0, 10, 0], y: [0, 20, 0] }}
-            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute left-[20%] bottom-[5%] h-[350px] w-[350px] rounded-full opacity-25"
-            style={{ background: "radial-gradient(circle, rgba(224,114,84,0.15) 0%, transparent 70%)" }}
-          />
-        </div>
-
         {/* Content */}
         <div className="relative z-10 flex max-w-lg flex-col items-center text-center">
           {/* Logo */}
