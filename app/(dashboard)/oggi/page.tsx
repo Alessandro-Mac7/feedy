@@ -313,21 +313,6 @@ export default function OggiPage() {
                 </>
               )}
 
-              {/* Shopping list button */}
-              <motion.button
-                type="button"
-                onClick={() => setShowShoppingList(true)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
-                className="mt-2 w-full rounded-2xl glass-subtle px-4 py-3 text-sm font-semibold text-foreground-muted hover:text-foreground transition-colors flex items-center justify-center gap-2"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <path d="M16 10a4 4 0 0 1-8 0" />
-                </svg>
-                Lista spesa
-              </motion.button>
             </motion.div>
           </AnimatePresence>
         </>
@@ -340,6 +325,31 @@ export default function OggiPage() {
         >
           <WeeklyStatsCard meals={diet.meals} />
           <WeeklyBarChart meals={diet.meals} goalKcal={goals?.dailyKcal} />
+
+          {/* Shopping list button */}
+          <motion.button
+            type="button"
+            onClick={() => setShowShoppingList(true)}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.96 }}
+            className="w-full rounded-2xl glass-strong px-4 py-4 text-sm font-semibold text-foreground hover:text-primary transition-colors flex items-center justify-center gap-2.5 shadow-sm"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+            Genera lista della spesa
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+              </svg>
+              AI
+            </span>
+          </motion.button>
         </motion.div>
       )}
     </div>
