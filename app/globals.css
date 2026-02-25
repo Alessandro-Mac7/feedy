@@ -70,7 +70,7 @@ body {
     radial-gradient(ellipse 100% 60% at 90% 80%, rgba(45, 159, 143, 0.12) 0%, transparent 50%),
     radial-gradient(ellipse 80% 70% at 50% 0%, rgba(59, 181, 164, 0.10) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 80% 30%, rgba(224, 114, 84, 0.05) 0%, transparent 50%),
-    linear-gradient(180deg, #ffffff 0%, #EFF5F1 3%, #E8F0EC 8%, #DEE9E3 35%, #D6E4DB 65%, #E0EBE5 100%);
+    linear-gradient(180deg, #ffffff 0%, #F7FBF9 5%, #F1F7F4 10%, #EBF2EE 15%, #E8F0EC 20%, #DEE9E3 40%, #D6E4DB 65%, #E0EBE5 100%);
 }
 
 .scrollbar-hide {
