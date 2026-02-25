@@ -52,14 +52,19 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     }
   }, [waterKey]);
 
-  const handleDropTap = useCallback(
-    (index: number) => {
-      const newFilled = index + 1 === waterFilled ? index : index + 1;
-      setWaterFilled(newFilled);
-      if (waterKey) localStorage.setItem(waterKey, String(newFilled));
-    },
-    [waterFilled, waterKey]
-  );
+  const handleWaterAdd = useCallback(() => {
+    if (waterFilled >= WATER_GLASSES) return;
+    const next = waterFilled + 1;
+    setWaterFilled(next);
+    if (waterKey) localStorage.setItem(waterKey, String(next));
+  }, [waterFilled, waterKey]);
+
+  const handleWaterRemove = useCallback(() => {
+    if (waterFilled <= 0) return;
+    const next = waterFilled - 1;
+    setWaterFilled(next);
+    if (waterKey) localStorage.setItem(waterKey, String(next));
+  }, [waterFilled, waterKey]);
 
   const waterMl = waterFilled * WATER_ML_PER_GLASS;
   const waterPct = (waterMl / WATER_TARGET_ML) * 100;
@@ -158,101 +163,183 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     (m) => m.carbs !== null || m.fats !== null || m.proteins !== null
   ).length;
 
-  // ── Water drops section ──
-  function WaterDrops() {
-    return (
-      <div className="flex flex-col items-center gap-1.5">
-        {/* Emoji header */}
-        <span className="text-base leading-none">💧</span>
+  // ── Water glass section ──
+  const glassW = 56;
+  const glassH = 80;
+  // Glass shape: slightly tapered, wider at top
+  const glassTop = 6;
+  const glassBot = 74;
+  const glassTopLeft = 4;
+  const glassTopRight = glassW - 4;
+  const glassBotLeft = 10;
+  const glassBotRight = glassW - 10;
+  const glassInnerH = glassBot - glassTop;
+  const fillH = (waterPct / 100) * glassInnerH;
+  const fillY = glassBot - fillH;
 
-        {/* 4×2 drop grid */}
-        <div className="grid grid-cols-4 gap-1">
-          {Array.from({ length: WATER_GLASSES }).map((_, i) => {
-            const isFilled = i < waterFilled;
-            return (
-              <motion.button
-                key={i}
-                type="button"
-                onClick={() => handleDropTap(i)}
-                className="flex items-center justify-center"
-                whileTap={{ scale: 0.75 }}
-                transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                aria-label={`Bicchiere ${i + 1} di ${WATER_GLASSES}`}
-              >
-                <svg width="22" height="28" viewBox="0 0 26 32">
-                  <defs>
-                    <linearGradient
-                      id={`wdrop-${i}`}
-                      x1="13"
-                      y1="2"
-                      x2="13"
-                      y2="28"
-                    >
-                      <stop offset="0%" stopColor="#7BC4E8" />
-                      <stop offset="100%" stopColor="#3B8DD4" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M13 2C13 2 3 12 3 18.5C3 23.5 7.5 28 13 28C18.5 28 23 23.5 23 18.5C23 12 13 2 13 2Z"
-                    fill={isFilled ? `url(#wdrop-${i})` : "none"}
-                    stroke={isFilled ? "#4A9BD9" : "rgba(74,155,217,0.3)"}
-                    strokeWidth="1.5"
-                    strokeDasharray={isFilled ? "none" : "3 2"}
-                    className="transition-colors duration-200"
-                  />
-                  {isFilled && (
-                    <ellipse
-                      cx="9"
-                      cy="17"
-                      rx="2"
-                      ry="3.5"
-                      fill="rgba(255,255,255,0.3)"
-                      transform="rotate(-15 9 17)"
+  function WaterGlass() {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        {/* Glass + buttons row */}
+        <div className="flex items-center gap-2">
+          {/* Minus button */}
+          <motion.button
+            type="button"
+            onClick={handleWaterRemove}
+            disabled={waterFilled <= 0}
+            whileTap={{ scale: 0.85 }}
+            className="flex h-8 w-8 items-center justify-center rounded-full glass-subtle text-foreground-muted disabled:opacity-25 transition-opacity"
+            aria-label="Rimuovi bicchiere"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </motion.button>
+
+          {/* Glass SVG */}
+          <div className="relative">
+            <svg width={glassW} height={glassH} viewBox={`0 0 ${glassW} ${glassH}`}>
+              <defs>
+                <clipPath id="glass-clip">
+                  <polygon points={`${glassTopLeft},${glassTop} ${glassTopRight},${glassTop} ${glassBotRight},${glassBot} ${glassBotLeft},${glassBot}`} />
+                </clipPath>
+                <linearGradient id="water-grad" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stopColor="#3B8DD4" />
+                  <stop offset="100%" stopColor="#7BC4E8" />
+                </linearGradient>
+              </defs>
+
+              {/* Glass outline */}
+              <polygon
+                points={`${glassTopLeft},${glassTop} ${glassTopRight},${glassTop} ${glassBotRight},${glassBot} ${glassBotLeft},${glassBot}`}
+                fill="none"
+                stroke="rgba(74,155,217,0.25)"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+
+              {/* Water fill */}
+              <g clipPath="url(#glass-clip)">
+                <motion.rect
+                  x="0"
+                  width={glassW}
+                  initial={{ height: 0, y: glassBot }}
+                  animate={{ height: fillH, y: fillY }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  fill="url(#water-grad)"
+                  opacity={0.8}
+                />
+
+                {/* Wave at water surface */}
+                {waterPct > 0 && waterPct < 100 && (
+                  <motion.path
+                    initial={{ y: glassBot }}
+                    animate={{ y: fillY - 2 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    d={`M0,3 Q${glassW * 0.25},0 ${glassW * 0.5},3 Q${glassW * 0.75},6 ${glassW},3 L${glassW},8 L0,8 Z`}
+                    fill="url(#water-grad)"
+                    opacity={0.8}
+                  >
+                    <animate
+                      attributeName="d"
+                      dur="2.5s"
+                      repeatCount="indefinite"
+                      values={`
+                        M0,3 Q${glassW * 0.25},0 ${glassW * 0.5},3 Q${glassW * 0.75},6 ${glassW},3 L${glassW},8 L0,8 Z;
+                        M0,3 Q${glassW * 0.25},6 ${glassW * 0.5},3 Q${glassW * 0.75},0 ${glassW},3 L${glassW},8 L0,8 Z;
+                        M0,3 Q${glassW * 0.25},0 ${glassW * 0.5},3 Q${glassW * 0.75},6 ${glassW},3 L${glassW},8 L0,8 Z
+                      `}
                     />
-                  )}
-                </svg>
-              </motion.button>
-            );
-          })}
+                  </motion.path>
+                )}
+
+                {/* Shine */}
+                <rect
+                  x={glassTopLeft + 3}
+                  y={glassTop}
+                  width="4"
+                  height={glassInnerH}
+                  rx="2"
+                  fill="rgba(255,255,255,0.1)"
+                />
+              </g>
+
+              {/* Bubbles when filling */}
+              {waterPct > 0 && waterPct < 100 && (
+                <g clipPath="url(#glass-clip)">
+                  {[0, 1, 2].map((b) => (
+                    <motion.circle
+                      key={b}
+                      cx={glassW * 0.3 + b * 10}
+                      r="1.5"
+                      fill="rgba(255,255,255,0.3)"
+                      initial={{ cy: glassBot, opacity: 0 }}
+                      animate={{
+                        cy: [glassBot, fillY + 5],
+                        opacity: [0, 0.4, 0],
+                      }}
+                      transition={{
+                        duration: 2,
+                        delay: b * 0.7,
+                        repeat: Infinity,
+                        ease: "easeOut",
+                      }}
+                    />
+                  ))}
+                </g>
+              )}
+
+              {/* Check when complete */}
+              {waterComplete && (
+                <motion.g
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", bounce: 0.4, delay: 0.2 }}
+                >
+                  <circle cx={glassW / 2} cy={glassH / 2} r="12" fill="rgba(45,159,143,0.9)" />
+                  <polyline
+                    points={`${glassW / 2 - 5},${glassH / 2} ${glassW / 2 - 1},${glassH / 2 + 4} ${glassW / 2 + 5},${glassH / 2 - 3}`}
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </motion.g>
+              )}
+            </svg>
+          </div>
+
+          {/* Plus button */}
+          <motion.button
+            type="button"
+            onClick={handleWaterAdd}
+            disabled={waterFilled >= WATER_GLASSES}
+            whileTap={{ scale: 0.85 }}
+            className="flex h-8 w-8 items-center justify-center rounded-full glass-subtle text-foreground-muted disabled:opacity-25 transition-opacity"
+            aria-label="Aggiungi bicchiere"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </motion.button>
         </div>
 
-        {/* Amount */}
-        <div className="flex items-baseline gap-0.5">
+        {/* Counter */}
+        <div className="flex flex-col items-center">
           <motion.span
-            key={waterMl}
-            initial={{ scale: 1.1 }}
+            key={waterFilled}
+            initial={{ scale: 1.15 }}
             animate={{ scale: 1 }}
-            className="text-[11px] font-bold tabular-nums leading-none"
+            className="text-sm font-bold tabular-nums leading-none"
             style={{ color: waterComplete ? "#2D9F8F" : "#4A9BD9" }}
           >
-            {waterText}
+            {waterFilled}/{WATER_GLASSES}
           </motion.span>
-          <span className="text-[8px] text-foreground-muted/60">/ 2L</span>
-          {waterComplete && (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", bounce: 0.5 }}
-              className="text-[10px] ml-0.5"
-            >
-              ✓
-            </motion.span>
-          )}
-        </div>
-
-        {/* Progress bar */}
-        <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
-          <motion.div
-            className="h-full rounded-full"
-            style={{
-              background: waterComplete
-                ? "linear-gradient(90deg, #2D9F8F, #3BB5A4)"
-                : "linear-gradient(90deg, #7BC4E8, #4A9BD9)",
-            }}
-            initial={{ width: 0 }}
-            animate={{ width: `${waterPct}%` }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          />
+          <span className="text-[9px] text-foreground-muted/60 mt-0.5">
+            bicchieri · {waterText}
+          </span>
         </div>
       </div>
     );
@@ -438,7 +525,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
           {/* ── Right 50%: Water ── */}
           {dayLabel && (
             <div className="flex-1 min-w-0 flex items-center justify-center pl-4">
-              <WaterDrops />
+              <WaterGlass />
             </div>
           )}
         </div>
@@ -460,7 +547,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
             </div>
           )}
 
-          {dayLabel && <WaterDrops />}
+          {dayLabel && <WaterGlass />}
         </div>
       )}
     </motion.div>
