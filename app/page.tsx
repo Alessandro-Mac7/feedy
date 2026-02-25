@@ -563,10 +563,16 @@ export default function LandingPage() {
         </motion.div>
 
         {/* Footer */}
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center space-y-2">
           <p className="text-xs text-foreground-muted/40">
             Feedy v0.1.0 — Fatto con cura in Italia
           </p>
+          <Link
+            href="/privacy"
+            className="inline-block text-xs text-foreground-muted/40 hover:text-primary transition-colors underline underline-offset-2"
+          >
+            Privacy Policy
+          </Link>
         </div>
       </section>
     </div>

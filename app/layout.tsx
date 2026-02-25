@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import { AuthProvider } from "@/components/auth-provider";
+import { CookieBanner } from "@/components/cookie-banner";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -44,7 +45,10 @@ export default function RootLayout({
   return (
     <html lang="it" className="light" style={{ colorScheme: "light" }} suppressHydrationWarning>
       <body className={`${dmSans.variable} ${dmSerif.variable} antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <CookieBanner />
+        </AuthProvider>
       </body>
     </html>
   );

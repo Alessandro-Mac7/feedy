@@ -4,10 +4,14 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/toast";
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 
 export default function ImpostazioniPage() {
   const session = authClient.useSession();
   const [signingOut, setSigningOut] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
   async function handleSignOut() {
@@ -26,6 +30,43 @@ export default function ImpostazioniPage() {
       const keys = await caches.keys();
       await Promise.all(keys.map((key) => caches.delete(key)));
       toast("Cache svuotata con successo.", "success");
+    }
+  }
+
+  async function handleExportData() {
+    setExporting(true);
+    try {
+      const res = await fetch("/api/account");
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `feedy-dati-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast("Dati esportati con successo.", "success");
+    } catch {
+      toast("Errore nell'esportazione dei dati.", "error");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/account", { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      await authClient.signOut();
+      window.location.href = "/auth/sign-in";
+    } catch {
+      toast("Errore nell'eliminazione dell'account.", "error");
+      setDeleting(false);
+      setShowDeleteDialog(false);
     }
   }
 
@@ -97,6 +138,31 @@ export default function ImpostazioniPage() {
         </a>
 
         <button
+          onClick={handleExportData}
+          disabled={exporting}
+          className="flex w-full items-center justify-between glass rounded-2xl px-5 py-3.5 text-sm font-medium text-foreground hover:bg-white/60 transition-colors min-h-[48px] disabled:opacity-60"
+        >
+          <span className="flex items-center gap-3">
+            {exporting ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" className="animate-spin text-foreground-muted">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+                <path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-foreground-muted">
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+                <polyline points="7 11 12 16 17 11" />
+                <line x1="12" y1="4" x2="12" y2="16" />
+              </svg>
+            )}
+            {exporting ? "Esportazione..." : "Esporta i miei dati"}
+          </span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground-muted/40">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+
+        <button
           onClick={handleClearCache}
           className="flex w-full items-center justify-between glass rounded-2xl px-5 py-3.5 text-sm font-medium text-foreground hover:bg-white/60 transition-colors min-h-[48px]"
         >
@@ -110,6 +176,19 @@ export default function ImpostazioniPage() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-foreground-muted/40">
             <polyline points="9 18 15 12 9 6" />
           </svg>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowDeleteDialog(true)}
+          className="flex w-full items-center gap-3 rounded-2xl border border-danger/20 glass px-5 py-3.5 text-sm font-semibold text-danger hover:bg-danger/5 transition-colors min-h-[48px]"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </svg>
+          Elimina account
         </button>
 
         <button
@@ -144,6 +223,15 @@ export default function ImpostazioniPage() {
         <p className="font-display text-lg text-foreground-muted/40">Feedy</p>
         <p className="text-xs text-foreground-muted/30">v0.1.0</p>
       </motion.div>
+
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDeleteAccount}
+        loading={deleting}
+        title="Elimina account"
+        description="Questa azione è irreversibile. Tutti i tuoi dati (diete, pasti, macro) verranno eliminati definitivamente. Sei sicuro di voler procedere?"
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
+import Link from "next/link";
 import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/toast";
 
@@ -19,6 +20,7 @@ export default function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -67,6 +69,7 @@ export default function AuthPage() {
   function switchMode() {
     setMode((m) => (m === "sign-in" ? "sign-up" : "sign-in"));
     setPassword("");
+    setPrivacyAccepted(false);
   }
 
   return (
@@ -218,10 +221,32 @@ export default function AuthPage() {
                 </div>
               </div>
 
+              {/* Privacy checkbox (sign-up only) */}
+              {mode === "sign-up" && (
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={privacyAccepted}
+                    onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-white/30 accent-primary"
+                  />
+                  <span className="text-xs text-foreground-muted leading-relaxed">
+                    Accetto la{" "}
+                    <Link
+                      href="/privacy"
+                      target="_blank"
+                      className="font-semibold text-primary hover:text-primary-light transition-colors underline underline-offset-2"
+                    >
+                      Privacy Policy
+                    </Link>
+                  </span>
+                </label>
+              )}
+
               {/* Submit */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (mode === "sign-up" && !privacyAccepted)}
                 className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-light transition-all hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
