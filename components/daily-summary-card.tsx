@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import type { Meal } from "@/types";
 
@@ -14,6 +14,19 @@ const MACROS = [
   { key: "proteins" as const, label: "Proteine", color: "#B86B4F" },
 ];
 
+// Water tracker constants
+const WATER_GLASSES = 8;
+const WATER_ML_PER_GLASS = 250;
+const WATER_TARGET_ML = WATER_GLASSES * WATER_ML_PER_GLASS;
+
+function getWaterStorageKey(day: string): string {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay() + 1);
+  const weekKey = weekStart.toISOString().slice(0, 10);
+  return `water-${weekKey}-${day}`;
+}
+
 interface DailySummaryCardProps {
   meals: Meal[];
   dayLabel?: string;
@@ -21,8 +34,40 @@ interface DailySummaryCardProps {
 }
 
 export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCardProps) {
-  // null = show kcal, 0/1/2 = show macro index
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  // Water state
+  const [waterFilled, setWaterFilled] = useState(0);
+  const [lastTapped, setLastTapped] = useState<number | null>(null);
+  const waterKey = dayLabel ? getWaterStorageKey(dayLabel) : "";
+
+  useEffect(() => {
+    if (!waterKey) return;
+    const saved = localStorage.getItem(waterKey);
+    if (saved !== null) {
+      const val = parseInt(saved, 10);
+      if (!isNaN(val) && val >= 0 && val <= WATER_GLASSES) {
+        setWaterFilled(val);
+      }
+    } else {
+      setWaterFilled(0);
+    }
+  }, [waterKey]);
+
+  const handleWaterTap = useCallback(
+    (index: number) => {
+      const newFilled = index + 1 === waterFilled ? index : index + 1;
+      setWaterFilled(newFilled);
+      setLastTapped(index);
+      if (waterKey) localStorage.setItem(waterKey, String(newFilled));
+      setTimeout(() => setLastTapped(null), 400);
+    },
+    [waterFilled, waterKey]
+  );
+
+  const waterMl = waterFilled * WATER_ML_PER_GLASS;
+  const waterPct = Math.round((waterMl / WATER_TARGET_ML) * 100);
+  const waterComplete = waterFilled >= WATER_GLASSES;
 
   const totals = meals.reduce(
     (acc, meal) => ({
@@ -52,7 +97,6 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
   const circumference = 2 * Math.PI * radius;
   const gap = 3;
 
-  // Build donut segments
   const segments: {
     key: string;
     label: string;
@@ -100,7 +144,6 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     }
   }
 
-  // What to show in center
   const activeMacro = activeIndex !== null ? MACROS[activeIndex] : null;
   const centerColor = activeMacro ? activeMacro.color : "var(--foreground)";
   const centerValue = activeMacro
@@ -113,6 +156,12 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
   const completedMeals = meals.filter(
     (m) => m.carbs !== null || m.fats !== null || m.proteins !== null
   ).length;
+
+  // Water display text
+  const waterText =
+    waterMl >= 1000
+      ? `${(waterMl / 1000).toFixed(waterMl % 1000 === 0 ? 0 : 1)}L`
+      : `${waterMl}ml`;
 
   return (
     <motion.div
@@ -135,13 +184,12 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
 
       {hasAny ? (
         <div className="flex items-center gap-5">
-          {/* Donut chart — tap to cycle */}
+          {/* Donut chart */}
           <div
             className="relative shrink-0 cursor-pointer"
             onClick={handleDonutTap}
           >
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-              {/* Background track */}
               <circle
                 cx={center}
                 cy={center}
@@ -150,7 +198,6 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                 stroke="rgba(255,255,255,0.15)"
                 strokeWidth="12"
               />
-              {/* Macro segments */}
               {segments.map((seg, i) => {
                 const isHighlighted = activeIndex === null || activeIndex === seg.macroIndex;
                 return (
@@ -183,7 +230,6 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                 );
               })}
             </svg>
-            {/* Center text — animates on change */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -209,7 +255,6 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                 </motion.div>
               </AnimatePresence>
             </div>
-            {/* Tap hint */}
             {activeIndex === null && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -222,7 +267,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
             )}
           </div>
 
-          {/* Macro legend with grams */}
+          {/* Macro legend */}
           <div className="flex-1 space-y-3">
             {MACROS.map((macro, i) => {
               const grams = totals[macro.key];
@@ -271,7 +316,6 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
               );
             })}
 
-            {/* Meal count */}
             <div className="flex items-center gap-1.5 pt-1">
               <div className="flex -space-x-1">
                 {meals.slice(0, 5).map((_, i) => (
@@ -305,6 +349,142 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
             </span>
           </div>
         )
+      )}
+
+      {/* Water tracker — divider + inline */}
+      {dayLabel && (
+        <>
+          <div className="border-t border-white/15 mt-4 pt-3.5">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#4A9BD9]">
+                  <path
+                    d="M12 2C12 2 4 11 4 16C4 20.4 7.6 24 12 24C16.4 24 20 20.4 20 16C20 11 12 2 12 2Z"
+                    fill="currentColor"
+                    opacity="0.2"
+                  />
+                  <path
+                    d="M12 2C12 2 4 11 4 16C4 20.4 7.6 24 12 24C16.4 24 20 20.4 20 16C20 11 12 2 12 2Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="text-[11px] font-semibold text-foreground-muted uppercase tracking-wider">
+                  Acqua
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <motion.span
+                  key={waterMl}
+                  initial={{ scale: 1.15 }}
+                  animate={{ scale: 1 }}
+                  className="text-xs font-bold tabular-nums"
+                  style={{ color: waterComplete ? "#2D9F8F" : "#4A9BD9" }}
+                >
+                  {waterText}
+                </motion.span>
+                <span className="text-[10px] text-foreground-muted">/ 2L</span>
+                {waterComplete && (
+                  <motion.svg
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", bounce: 0.5 }}
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#2D9F8F"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </motion.svg>
+                )}
+              </div>
+            </div>
+
+            {/* Droplets row */}
+            <div className="flex items-center gap-0.5">
+              {Array.from({ length: WATER_GLASSES }).map((_, i) => {
+                const isFilled = i < waterFilled;
+                const isJustTapped = i === lastTapped;
+
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handleWaterTap(i)}
+                    className="flex-1 flex items-center justify-center min-h-[40px]"
+                    aria-label={`Bicchiere ${i + 1} di ${WATER_GLASSES}`}
+                  >
+                    <motion.svg
+                      width="22"
+                      height="28"
+                      viewBox="0 0 28 34"
+                      initial={false}
+                      animate={{
+                        scale: isJustTapped ? [1, 1.35, 1] : 1,
+                        y: isJustTapped ? [0, -3, 0] : 0,
+                      }}
+                      transition={{
+                        duration: 0.4,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id={`wf-${i}`}
+                          x1="14"
+                          y1="2"
+                          x2="14"
+                          y2="31"
+                        >
+                          <stop offset="0%" stopColor="#7BC4E8" />
+                          <stop offset="100%" stopColor="#4A9BD9" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d="M14 2C14 2 4 14 4 21C4 26.5 8.5 31 14 31C19.5 31 24 26.5 24 21C24 14 14 2 14 2Z"
+                        fill={isFilled ? `url(#wf-${i})` : "none"}
+                        stroke={isFilled ? "#4A9BD9" : "rgba(74,155,217,0.3)"}
+                        strokeWidth="1.5"
+                        strokeDasharray={isFilled ? "none" : "3 2"}
+                      />
+                      {isFilled && (
+                        <ellipse
+                          cx="10"
+                          cy="18"
+                          rx="2"
+                          ry="3.5"
+                          fill="rgba(255,255,255,0.3)"
+                          transform="rotate(-15 10 18)"
+                        />
+                      )}
+                    </motion.svg>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Progress bar */}
+            <div className="mt-2 h-1 rounded-full bg-white/10 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{
+                  background: waterComplete
+                    ? "linear-gradient(90deg, #2D9F8F, #3BB5A4)"
+                    : "linear-gradient(90deg, #7BC4E8, #4A9BD9)",
+                }}
+                initial={{ width: 0 }}
+                animate={{ width: `${waterPct}%` }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
+          </div>
+        </>
       )}
     </motion.div>
   );
