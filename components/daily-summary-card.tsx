@@ -14,7 +14,6 @@ const MACROS = [
   { key: "proteins" as const, label: "Proteine", color: "#B86B4F" },
 ];
 
-// Water tracker constants
 const WATER_GLASSES = 8;
 const WATER_ML_PER_GLASS = 250;
 const WATER_TARGET_ML = WATER_GLASSES * WATER_ML_PER_GLASS;
@@ -38,7 +37,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
 
   // Water state
   const [waterFilled, setWaterFilled] = useState(0);
-  const [lastTapped, setLastTapped] = useState<number | null>(null);
+  const [justAdded, setJustAdded] = useState(false);
   const waterKey = dayLabel ? getWaterStorageKey(dayLabel) : "";
 
   useEffect(() => {
@@ -54,20 +53,22 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     }
   }, [waterKey]);
 
-  const handleWaterTap = useCallback(
-    (index: number) => {
-      const newFilled = index + 1 === waterFilled ? index : index + 1;
-      setWaterFilled(newFilled);
-      setLastTapped(index);
-      if (waterKey) localStorage.setItem(waterKey, String(newFilled));
-      setTimeout(() => setLastTapped(null), 400);
-    },
-    [waterFilled, waterKey]
-  );
+  const handleWaterTap = useCallback(() => {
+    const next = waterFilled >= WATER_GLASSES ? 0 : waterFilled + 1;
+    setWaterFilled(next);
+    setJustAdded(true);
+    if (waterKey) localStorage.setItem(waterKey, String(next));
+    setTimeout(() => setJustAdded(false), 500);
+  }, [waterFilled, waterKey]);
 
   const waterMl = waterFilled * WATER_ML_PER_GLASS;
-  const waterPct = Math.round((waterMl / WATER_TARGET_ML) * 100);
+  const waterPct = (waterMl / WATER_TARGET_ML) * 100;
   const waterComplete = waterFilled >= WATER_GLASSES;
+
+  const waterText =
+    waterMl >= 1000
+      ? `${(waterMl / 1000).toFixed(waterMl % 1000 === 0 ? 0 : 1)}L`
+      : `${waterMl}ml`;
 
   const totals = meals.reduce(
     (acc, meal) => ({
@@ -91,9 +92,9 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
   const percentages = { carbs: pctCarbs, fats: pctFats, proteins: pctProteins };
 
   // Donut geometry
-  const size = 148;
+  const size = 130;
   const center = size / 2;
-  const radius = 56;
+  const radius = 48;
   const circumference = 2 * Math.PI * radius;
   const gap = 3;
 
@@ -157,11 +158,10 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     (m) => m.carbs !== null || m.fats !== null || m.proteins !== null
   ).length;
 
-  // Water display text
-  const waterText =
-    waterMl >= 1000
-      ? `${(waterMl / 1000).toFixed(waterMl % 1000 === 0 ? 0 : 1)}L`
-      : `${waterMl}ml`;
+  // Water column dimensions
+  const colHeight = 120;
+  const colWidth = 36;
+  const colRadius = 12;
 
   return (
     <motion.div
@@ -183,7 +183,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
       )}
 
       {hasAny ? (
-        <div className="flex items-center gap-5">
+        <div className="flex items-start gap-4">
           {/* Donut chart */}
           <div
             className="relative shrink-0 cursor-pointer"
@@ -196,7 +196,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                 r={radius}
                 fill="none"
                 stroke="rgba(255,255,255,0.15)"
-                strokeWidth="12"
+                strokeWidth="10"
               />
               {segments.map((seg, i) => {
                 const isHighlighted = activeIndex === null || activeIndex === seg.macroIndex;
@@ -210,10 +210,10 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                     stroke={seg.color}
                     strokeLinecap="round"
                     strokeDasharray={`${seg.length} ${circumference - seg.length}`}
-                    initial={{ strokeDashoffset: circumference, strokeWidth: 12 }}
+                    initial={{ strokeDashoffset: circumference, strokeWidth: 10 }}
                     animate={{
                       strokeDashoffset: -seg.offset,
-                      strokeWidth: activeIndex === seg.macroIndex ? 16 : 12,
+                      strokeWidth: activeIndex === seg.macroIndex ? 14 : 10,
                       opacity: isHighlighted ? 1 : 0.3,
                     }}
                     transition={{
@@ -241,13 +241,13 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                   className="flex flex-col items-center"
                 >
                   <span
-                    className="text-2xl font-bold tabular-nums leading-none"
+                    className="text-xl font-bold tabular-nums leading-none"
                     style={{ color: centerColor }}
                   >
                     {centerValue}
                   </span>
                   <span
-                    className="text-[10px] font-medium uppercase tracking-wider mt-0.5"
+                    className="text-[9px] font-medium uppercase tracking-wider mt-0.5"
                     style={{ color: activeMacro ? activeMacro.color : "var(--foreground-muted)" }}
                   >
                     {centerSub}
@@ -267,8 +267,8 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
             )}
           </div>
 
-          {/* Macro legend */}
-          <div className="flex-1 space-y-3">
+          {/* Macro legend — center column */}
+          <div className="flex-1 min-w-0 space-y-2.5 pt-1">
             {MACROS.map((macro, i) => {
               const grams = totals[macro.key];
               const pct = percentages[macro.key];
@@ -284,28 +284,28 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                     scale: isActive ? 1.02 : 1,
                   }}
                   transition={{ delay: 0.3 + i * 0.1, duration: 0.3 }}
-                  className="flex items-center gap-2.5 cursor-pointer"
+                  className="flex items-center gap-2 cursor-pointer"
                   onClick={() => setActiveIndex(isActive ? null : i)}
                 >
                   <div
-                    className="h-3 w-3 rounded-full shrink-0 transition-transform"
+                    className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform"
                     style={{
                       backgroundColor: macro.color,
                       transform: isActive ? "scale(1.3)" : "scale(1)",
                     }}
                   />
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-semibold text-foreground">
+                    <span className="text-[11px] font-semibold text-foreground">
                       {macro.label}
                     </span>
-                    <span className="text-[10px] text-foreground-muted tabular-nums ml-1.5">
+                    <span className="text-[10px] text-foreground-muted tabular-nums ml-1">
                       {grams}g
                     </span>
                     {isActive && (
                       <motion.span
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: "auto" }}
-                        className="text-[10px] font-bold tabular-nums ml-1"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-[10px] font-bold tabular-nums ml-0.5"
                         style={{ color: macro.color }}
                       >
                         · {pct}%
@@ -316,7 +316,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
               );
             })}
 
-            <div className="flex items-center gap-1.5 pt-1">
+            <div className="flex items-center gap-1.5 pt-0.5">
               <div className="flex -space-x-1">
                 {meals.slice(0, 5).map((_, i) => (
                   <div
@@ -328,163 +328,271 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                 ))}
               </div>
               <span className="text-[10px] text-foreground-muted">
-                {completedMeals}/{meals.length} pasti tracciati
+                {completedMeals}/{meals.length} pasti
               </span>
             </div>
           </div>
-        </div>
-      ) : (
-        meals.length > 0 && (
-          <div className="flex items-center gap-1.5">
-            <div className="flex -space-x-1">
-              {meals.slice(0, 5).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full border border-white/40 bg-white/25"
-                />
-              ))}
-            </div>
-            <span className="text-[10px] text-foreground-muted">
-              {meals.length} pasti — nessun macro tracciato
-            </span>
-          </div>
-        )
-      )}
 
-      {/* Water tracker — divider + inline */}
-      {dayLabel && (
-        <>
-          <div className="border-t border-white/15 mt-4 pt-3.5">
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#4A9BD9]">
-                  <path
-                    d="M12 2C12 2 4 11 4 16C4 20.4 7.6 24 12 24C16.4 24 20 20.4 20 16C20 11 12 2 12 2Z"
-                    fill="currentColor"
-                    opacity="0.2"
-                  />
-                  <path
-                    d="M12 2C12 2 4 11 4 16C4 20.4 7.6 24 12 24C16.4 24 20 20.4 20 16C20 11 12 2 12 2Z"
-                    stroke="currentColor"
+          {/* Water column — right side */}
+          {dayLabel && (
+            <div className="shrink-0 flex flex-col items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleWaterTap}
+                className="relative cursor-pointer"
+                aria-label={`Aggiungi acqua: ${waterMl}ml di ${WATER_TARGET_ML}ml`}
+              >
+                <svg width={colWidth} height={colHeight} viewBox={`0 0 ${colWidth} ${colHeight}`}>
+                  <defs>
+                    <clipPath id="water-col-clip">
+                      <rect x="0" y="0" width={colWidth} height={colHeight} rx={colRadius} />
+                    </clipPath>
+                    <linearGradient id="water-col-grad" x1="0" y1="1" x2="0" y2="0">
+                      <stop offset="0%" stopColor="#3B8DD4" />
+                      <stop offset="100%" stopColor="#7BC4E8" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Background */}
+                  <rect
+                    x="0"
+                    y="0"
+                    width={colWidth}
+                    height={colHeight}
+                    rx={colRadius}
+                    fill="none"
+                    stroke="rgba(74,155,217,0.25)"
                     strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
                   />
+
+                  {/* Graduation marks */}
+                  {[2, 4, 6].map((level) => {
+                    const markY = colHeight - (level / WATER_GLASSES) * colHeight;
+                    return (
+                      <line
+                        key={level}
+                        x1="6"
+                        y1={markY}
+                        x2={colWidth - 6}
+                        y2={markY}
+                        stroke="rgba(74,155,217,0.12)"
+                        strokeWidth="0.75"
+                      />
+                    );
+                  })}
+
+                  {/* Water fill */}
+                  <g clipPath="url(#water-col-clip)">
+                    <motion.rect
+                      x="0"
+                      width={colWidth}
+                      initial={{ height: 0, y: colHeight }}
+                      animate={{
+                        height: (waterPct / 100) * colHeight,
+                        y: colHeight - (waterPct / 100) * colHeight,
+                      }}
+                      transition={{
+                        duration: 0.6,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      fill="url(#water-col-grad)"
+                      opacity={0.85}
+                    />
+
+                    {/* Wave at top of water */}
+                    {waterPct > 0 && waterPct < 100 && (
+                      <motion.path
+                        initial={{ y: colHeight }}
+                        animate={{
+                          y: colHeight - (waterPct / 100) * colHeight - 3,
+                        }}
+                        transition={{
+                          duration: 0.6,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        d={`M0,4 Q${colWidth * 0.25},0 ${colWidth * 0.5},4 Q${colWidth * 0.75},8 ${colWidth},4 L${colWidth},10 L0,10 Z`}
+                        fill="url(#water-col-grad)"
+                        opacity={0.85}
+                      >
+                        <animate
+                          attributeName="d"
+                          dur="3s"
+                          repeatCount="indefinite"
+                          values={`
+                            M0,4 Q${colWidth * 0.25},0 ${colWidth * 0.5},4 Q${colWidth * 0.75},8 ${colWidth},4 L${colWidth},10 L0,10 Z;
+                            M0,4 Q${colWidth * 0.25},8 ${colWidth * 0.5},4 Q${colWidth * 0.75},0 ${colWidth},4 L${colWidth},10 L0,10 Z;
+                            M0,4 Q${colWidth * 0.25},0 ${colWidth * 0.5},4 Q${colWidth * 0.75},8 ${colWidth},4 L${colWidth},10 L0,10 Z
+                          `}
+                        />
+                      </motion.path>
+                    )}
+
+                    {/* Shine */}
+                    <rect
+                      x="5"
+                      y="0"
+                      width="4"
+                      height={colHeight}
+                      rx="2"
+                      fill="rgba(255,255,255,0.12)"
+                    />
+                  </g>
+
+                  {/* Plus icon when not full */}
+                  {!waterComplete && (
+                    <motion.g
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.4 }}
+                      transition={{ delay: 0.8 }}
+                    >
+                      <line
+                        x1={colWidth / 2}
+                        y1="8"
+                        x2={colWidth / 2}
+                        y2="16"
+                        stroke="rgba(74,155,217,0.6)"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <line
+                        x1={colWidth / 2 - 4}
+                        y1="12"
+                        x2={colWidth / 2 + 4}
+                        y2="12"
+                        stroke="rgba(74,155,217,0.6)"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </motion.g>
+                  )}
+
+                  {/* Check when complete */}
+                  {waterComplete && (
+                    <motion.polyline
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.2 }}
+                      points={`${colWidth / 2 - 5},${colHeight / 2} ${colWidth / 2 - 1},${colHeight / 2 + 4} ${colWidth / 2 + 5},${colHeight / 2 - 4}`}
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
                 </svg>
-                <span className="text-[11px] font-semibold text-foreground-muted uppercase tracking-wider">
-                  Acqua
-                </span>
-              </div>
-              <div className="flex items-baseline gap-1">
+
+                {/* Ripple on tap */}
+                <AnimatePresence>
+                  {justAdded && (
+                    <motion.div
+                      initial={{ scale: 0.5, opacity: 0.5 }}
+                      animate={{ scale: 2, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="absolute inset-0 rounded-xl border-2 border-[#4A9BD9]"
+                    />
+                  )}
+                </AnimatePresence>
+              </button>
+
+              {/* Water amount label */}
+              <div className="flex flex-col items-center">
                 <motion.span
                   key={waterMl}
-                  initial={{ scale: 1.15 }}
+                  initial={{ scale: 1.2 }}
                   animate={{ scale: 1 }}
-                  className="text-xs font-bold tabular-nums"
+                  className="text-[11px] font-bold tabular-nums leading-none"
                   style={{ color: waterComplete ? "#2D9F8F" : "#4A9BD9" }}
                 >
                   {waterText}
                 </motion.span>
-                <span className="text-[10px] text-foreground-muted">/ 2L</span>
-                {waterComplete && (
-                  <motion.svg
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", bounce: 0.5 }}
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#2D9F8F"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </motion.svg>
-                )}
+                <span className="text-[9px] text-foreground-muted/60">/ 2L</span>
               </div>
             </div>
-
-            {/* Droplets row */}
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: WATER_GLASSES }).map((_, i) => {
-                const isFilled = i < waterFilled;
-                const isJustTapped = i === lastTapped;
-
-                return (
-                  <button
+          )}
+        </div>
+      ) : (
+        <div>
+          {meals.length > 0 && (
+            <div className="flex items-center gap-1.5 mb-3">
+              <div className="flex -space-x-1">
+                {meals.slice(0, 5).map((_, i) => (
+                  <div
                     key={i}
-                    type="button"
-                    onClick={() => handleWaterTap(i)}
-                    className="flex-1 flex items-center justify-center min-h-[40px]"
-                    aria-label={`Bicchiere ${i + 1} di ${WATER_GLASSES}`}
-                  >
-                    <motion.svg
-                      width="22"
-                      height="28"
-                      viewBox="0 0 28 34"
-                      initial={false}
-                      animate={{
-                        scale: isJustTapped ? [1, 1.35, 1] : 1,
-                        y: isJustTapped ? [0, -3, 0] : 0,
-                      }}
-                      transition={{
-                        duration: 0.4,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      <defs>
-                        <linearGradient
-                          id={`wf-${i}`}
-                          x1="14"
-                          y1="2"
-                          x2="14"
-                          y2="31"
-                        >
-                          <stop offset="0%" stopColor="#7BC4E8" />
-                          <stop offset="100%" stopColor="#4A9BD9" />
-                        </linearGradient>
-                      </defs>
-                      <path
-                        d="M14 2C14 2 4 14 4 21C4 26.5 8.5 31 14 31C19.5 31 24 26.5 24 21C24 14 14 2 14 2Z"
-                        fill={isFilled ? `url(#wf-${i})` : "none"}
-                        stroke={isFilled ? "#4A9BD9" : "rgba(74,155,217,0.3)"}
-                        strokeWidth="1.5"
-                        strokeDasharray={isFilled ? "none" : "3 2"}
-                      />
-                      {isFilled && (
-                        <ellipse
-                          cx="10"
-                          cy="18"
-                          rx="2"
-                          ry="3.5"
-                          fill="rgba(255,255,255,0.3)"
-                          transform="rotate(-15 10 18)"
-                        />
-                      )}
-                    </motion.svg>
-                  </button>
-                );
-              })}
+                    className="h-1.5 w-1.5 rounded-full border border-white/40 bg-white/25"
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] text-foreground-muted">
+                {meals.length} pasti — nessun macro tracciato
+              </span>
             </div>
+          )}
 
-            {/* Progress bar */}
-            <div className="mt-2 h-1 rounded-full bg-white/10 overflow-hidden">
-              <motion.div
-                className="h-full rounded-full"
-                style={{
-                  background: waterComplete
-                    ? "linear-gradient(90deg, #2D9F8F, #3BB5A4)"
-                    : "linear-gradient(90deg, #7BC4E8, #4A9BD9)",
-                }}
-                initial={{ width: 0 }}
-                animate={{ width: `${waterPct}%` }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              />
+          {/* Water column even without macros */}
+          {dayLabel && (
+            <div className="flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={handleWaterTap}
+                className="relative cursor-pointer"
+                aria-label={`Aggiungi acqua: ${waterMl}ml di ${WATER_TARGET_ML}ml`}
+              >
+                <svg width={colWidth} height={80} viewBox={`0 0 ${colWidth} 80`}>
+                  <defs>
+                    <clipPath id="water-col-clip-sm">
+                      <rect x="0" y="0" width={colWidth} height={80} rx={colRadius} />
+                    </clipPath>
+                    <linearGradient id="water-col-grad-sm" x1="0" y1="1" x2="0" y2="0">
+                      <stop offset="0%" stopColor="#3B8DD4" />
+                      <stop offset="100%" stopColor="#7BC4E8" />
+                    </linearGradient>
+                  </defs>
+                  <rect
+                    x="0" y="0"
+                    width={colWidth} height={80}
+                    rx={colRadius}
+                    fill="none"
+                    stroke="rgba(74,155,217,0.25)"
+                    strokeWidth="1.5"
+                  />
+                  <g clipPath="url(#water-col-clip-sm)">
+                    <motion.rect
+                      x="0"
+                      width={colWidth}
+                      initial={{ height: 0, y: 80 }}
+                      animate={{
+                        height: (waterPct / 100) * 80,
+                        y: 80 - (waterPct / 100) * 80,
+                      }}
+                      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                      fill="url(#water-col-grad-sm)"
+                      opacity={0.85}
+                    />
+                    <rect x="5" y="0" width="4" height={80} rx="2" fill="rgba(255,255,255,0.12)" />
+                  </g>
+                </svg>
+              </button>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-semibold text-foreground-muted uppercase tracking-wider">
+                  Acqua
+                </span>
+                <motion.span
+                  key={waterMl}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                  className="text-sm font-bold tabular-nums"
+                  style={{ color: waterComplete ? "#2D9F8F" : "#4A9BD9" }}
+                >
+                  {waterText}
+                  <span className="text-[10px] text-foreground-muted font-normal"> / 2L</span>
+                </motion.span>
+                <span className="text-[9px] text-foreground-muted/50 mt-0.5">tap per aggiungere</span>
+              </div>
             </div>
-          </div>
-        </>
+          )}
+        </div>
       )}
     </motion.div>
   );

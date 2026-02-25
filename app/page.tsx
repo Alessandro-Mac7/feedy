@@ -20,8 +20,13 @@ const FEATURES = [
   },
   {
     icon: "📊",
-    title: "Riepilogo giornaliero",
-    description: "Visualizza calorie e macro con grafici animati.",
+    title: "Donut interattivo",
+    description: "Tocca il grafico per esplorare le % di ogni macronutriente.",
+  },
+  {
+    icon: "💧",
+    title: "Tracker acqua",
+    description: "Monitora i tuoi 2L giornalieri con una colonna animata.",
   },
   {
     icon: "✏️",
@@ -223,9 +228,11 @@ export default function LandingPage() {
             className="absolute bottom-[25%] left-[3%] -rotate-2"
           >
             <div className="glass rounded-2xl px-4 py-3 shadow-lg">
-              <p className="text-[10px] font-semibold text-foreground-muted uppercase tracking-wider mb-1">Oggi</p>
-              <p className="text-2xl font-bold text-foreground tabular-nums">1.847</p>
-              <p className="text-[10px] text-foreground-muted">kcal tracciate</p>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm">💧</span>
+                <p className="text-[10px] font-semibold text-foreground-muted uppercase tracking-wider">Acqua</p>
+              </div>
+              <p className="text-lg font-bold tabular-nums" style={{ color: "#4A9BD9" }}>1.5L <span className="text-[10px] text-foreground-muted font-normal">/ 2L</span></p>
             </div>
           </FloatingCard>
         </div>
@@ -284,7 +291,7 @@ export default function LandingPage() {
               ))}
             </div>
 
-            {/* Summary mock */}
+            {/* Summary mock — matches new donut + water column layout */}
             <div className="glass rounded-2xl p-4 mb-3">
               <div className="flex items-center justify-between mb-3">
                 <p className="font-display text-lg text-foreground">Mercoledì</p>
@@ -292,46 +299,87 @@ export default function LandingPage() {
                   Dieta Mediterranea
                 </span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-3">
+                {/* Donut with percentage segments */}
                 <div className="relative shrink-0">
-                  <svg width="64" height="64" viewBox="0 0 64 64">
-                    <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="5" />
+                  <svg width="68" height="68" viewBox="0 0 68 68">
+                    <circle cx="34" cy="34" r="26" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="5.5" />
+                    {/* Carbs segment ~48% */}
                     <circle
-                      cx="32" cy="32" r="26"
-                      fill="none" stroke="var(--primary)" strokeWidth="5"
+                      cx="34" cy="34" r="26"
+                      fill="none" stroke="#4A8AC4" strokeWidth="5.5"
                       strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 26}`}
-                      strokeDashoffset={`${2 * Math.PI * 26 * 0.28}`}
-                      transform="rotate(-90 32 32)"
+                      strokeDasharray={`${2 * Math.PI * 26 * 0.46} ${2 * Math.PI * 26 * 0.54}`}
+                      transform="rotate(-90 34 34)"
+                    />
+                    {/* Fats segment ~28% */}
+                    <circle
+                      cx="34" cy="34" r="26"
+                      fill="none" stroke="#C9A033" strokeWidth="5.5"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 26 * 0.26} ${2 * Math.PI * 26 * 0.74}`}
+                      strokeDashoffset={`${-(2 * Math.PI * 26 * 0.48)}`}
+                      transform="rotate(-90 34 34)"
+                    />
+                    {/* Proteins segment ~24% */}
+                    <circle
+                      cx="34" cy="34" r="26"
+                      fill="none" stroke="#B86B4F" strokeWidth="5.5"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 26 * 0.22} ${2 * Math.PI * 26 * 0.78}`}
+                      strokeDashoffset={`${-(2 * Math.PI * 26 * 0.76)}`}
+                      transform="rotate(-90 34 34)"
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-sm font-bold text-foreground">1.847</span>
-                    <span className="text-[8px] text-foreground-muted">kcal</span>
+                    <span className="text-[11px] font-bold text-foreground">1.847</span>
+                    <span className="text-[7px] text-foreground-muted">kcal</span>
                   </div>
                 </div>
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-[#4A8AC4] w-6">Carb</span>
-                    <div className="flex-1 h-1.5 rounded-full bg-white/20 overflow-hidden">
-                      <div className="h-full w-[65%] rounded-full bg-[#4A8AC4]" />
+
+                {/* Macro legend */}
+                <div className="flex-1 min-w-0 space-y-1 pt-0.5">
+                  {[
+                    { label: "Carb", g: "210g", pct: "48%", color: "#4A8AC4" },
+                    { label: "Grassi", g: "58g", pct: "28%", color: "#C9A033" },
+                    { label: "Prot", g: "92g", pct: "24%", color: "#B86B4F" },
+                  ].map((m) => (
+                    <div key={m.label} className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: m.color }} />
+                      <span className="text-[9px] font-semibold text-foreground">{m.label}</span>
+                      <span className="text-[9px] text-foreground-muted tabular-nums">{m.g}</span>
+                      <span className="text-[8px] font-bold tabular-nums" style={{ color: m.color }}>{m.pct}</span>
                     </div>
-                    <span className="text-[10px] font-bold text-[#4A8AC4] w-8 text-right">210g</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-[#C9A033] w-6">Grassi</span>
-                    <div className="flex-1 h-1.5 rounded-full bg-white/20 overflow-hidden">
-                      <div className="h-full w-[45%] rounded-full bg-[#C9A033]" />
+                  ))}
+                  <div className="flex items-center gap-1 pt-0.5">
+                    <div className="flex -space-x-0.5">
+                      {[true, true, true, false, false].map((filled, i) => (
+                        <div key={i} className={`h-1 w-1 rounded-full border border-white/40 ${filled ? "bg-primary" : "bg-white/25"}`} />
+                      ))}
                     </div>
-                    <span className="text-[10px] font-bold text-[#C9A033] w-8 text-right">58g</span>
+                    <span className="text-[8px] text-foreground-muted">3/5 pasti</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-[#B86B4F] w-6">Prot</span>
-                    <div className="flex-1 h-1.5 rounded-full bg-white/20 overflow-hidden">
-                      <div className="h-full w-[55%] rounded-full bg-[#B86B4F]" />
-                    </div>
-                    <span className="text-[10px] font-bold text-[#B86B4F] w-8 text-right">92g</span>
-                  </div>
+                </div>
+
+                {/* Water column mini */}
+                <div className="shrink-0 flex flex-col items-center gap-0.5">
+                  <svg width="20" height="52" viewBox="0 0 20 52">
+                    <defs>
+                      <clipPath id="mock-water-clip">
+                        <rect x="0" y="0" width="20" height="52" rx="7" />
+                      </clipPath>
+                      <linearGradient id="mock-water-grad" x1="0" y1="1" x2="0" y2="0">
+                        <stop offset="0%" stopColor="#3B8DD4" />
+                        <stop offset="100%" stopColor="#7BC4E8" />
+                      </linearGradient>
+                    </defs>
+                    <rect x="0" y="0" width="20" height="52" rx="7" fill="none" stroke="rgba(74,155,217,0.25)" strokeWidth="1" />
+                    <g clipPath="url(#mock-water-clip)">
+                      <rect x="0" y="20" width="20" height="32" fill="url(#mock-water-grad)" opacity="0.85" />
+                      <rect x="3" y="0" width="2.5" height="52" rx="1" fill="rgba(255,255,255,0.1)" />
+                    </g>
+                  </svg>
+                  <span className="text-[8px] font-bold text-[#4A9BD9] tabular-nums">1.5L</span>
                 </div>
               </div>
             </div>
@@ -398,7 +446,11 @@ export default function LandingPage() {
                   duration: 0.6,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className="glass rounded-2xl p-4 hover:shadow-lg hover:shadow-primary/6 transition-shadow"
+                className={`glass rounded-2xl p-4 hover:shadow-lg hover:shadow-primary/6 transition-shadow ${
+                  i === FEATURES.length - 1 && FEATURES.length % 2 !== 0
+                    ? "col-span-2 max-w-[65%] mx-auto"
+                    : ""
+                }`}
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/50 text-xl mb-3">
                   {f.icon}
