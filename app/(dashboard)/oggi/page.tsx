@@ -14,6 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "@/components/toast";
 import { OverlayLoader } from "@/components/page-loader";
+import { AiConsentDialog } from "@/components/ai-consent-dialog";
 
 interface DietWithMeals extends Diet {
   meals: Meal[];
@@ -24,6 +25,7 @@ export default function OggiPage() {
   const [diet, setDiet] = useState<DietWithMeals | null>(null);
   const [loading, setLoading] = useState(true);
   const [estimating, setEstimating] = useState<string | null>(null);
+  const [pendingMealId, setPendingMealId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadActiveDiet = useCallback(async () => {
@@ -51,7 +53,27 @@ export default function OggiPage() {
     loadActiveDiet();
   }, [loadActiveDiet]);
 
-  async function handleEstimateMacros(mealId: string) {
+  function handleEstimateMacros(mealId: string) {
+    if (localStorage.getItem("ai-consent-accepted")) {
+      doEstimate(mealId);
+    } else {
+      setPendingMealId(mealId);
+    }
+  }
+
+  function handleAiConsentAccept() {
+    localStorage.setItem("ai-consent-accepted", "true");
+    const mealId = pendingMealId;
+    setPendingMealId(null);
+    if (mealId) doEstimate(mealId);
+  }
+
+  function handleAiConsentCancel() {
+    setPendingMealId(null);
+    toast("Stima annullata", "info");
+  }
+
+  async function doEstimate(mealId: string) {
     setEstimating(mealId);
     try {
       const res = await fetch("/api/estimate-macros", {
@@ -139,6 +161,11 @@ export default function OggiPage() {
 
   return (
     <div className="space-y-5">
+      <AiConsentDialog
+        open={pendingMealId !== null}
+        onAccept={handleAiConsentAccept}
+        onCancel={handleAiConsentCancel}
+      />
       <AnimatePresence>
         {estimating && <OverlayLoader message="Stima macro con AI..." />}
       </AnimatePresence>
