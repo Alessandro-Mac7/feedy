@@ -58,6 +58,10 @@
   --font-sans: var(--font-dm-sans);
 }
 
+html {
+  background: var(--background);
+}
+
 /* Gradient mesh background — green/teal atmosphere */
 body {
   color: var(--foreground);
