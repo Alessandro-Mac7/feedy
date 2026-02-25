@@ -268,7 +268,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
           </div>
 
           {/* Macro legend — center column */}
-          <div className="flex-1 min-w-0 space-y-2.5 pt-1">
+          <div className="flex-1 min-w-0 space-y-2 pt-1">
             {MACROS.map((macro, i) => {
               const grams = totals[macro.key];
               const pct = percentages[macro.key];
@@ -284,39 +284,55 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                     scale: isActive ? 1.02 : 1,
                   }}
                   transition={{ delay: 0.3 + i * 0.1, duration: 0.3 }}
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="cursor-pointer"
                   onClick={() => setActiveIndex(isActive ? null : i)}
                 >
-                  <div
-                    className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform"
-                    style={{
-                      backgroundColor: macro.color,
-                      transform: isActive ? "scale(1.3)" : "scale(1)",
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[11px] font-semibold text-foreground">
-                      {macro.label}
-                    </span>
-                    <span className="text-[10px] text-foreground-muted tabular-nums ml-1">
-                      {grams}g
-                    </span>
-                    {isActive && (
-                      <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-[10px] font-bold tabular-nums ml-0.5"
+                  <div className="flex items-center justify-between gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <div
+                        className="h-2 w-2 rounded-full shrink-0 transition-transform"
+                        style={{
+                          backgroundColor: macro.color,
+                          transform: isActive ? "scale(1.3)" : "scale(1)",
+                        }}
+                      />
+                      <span className="text-[11px] font-semibold text-foreground">
+                        {macro.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-[10px] text-foreground-muted tabular-nums">
+                        {grams}g
+                      </span>
+                      <span
+                        className="text-[10px] font-bold tabular-nums"
                         style={{ color: macro.color }}
                       >
-                        · {pct}%
-                      </motion.span>
-                    )}
+                        {pct}%
+                      </span>
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: macro.color }}
+                      initial={{ width: 0 }}
+                      animate={{
+                        width: `${pct}%`,
+                        opacity: isActive ? 1 : 0.65,
+                      }}
+                      transition={{
+                        width: { delay: 0.4 + i * 0.12, duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+                        opacity: { duration: 0.3 },
+                      }}
+                    />
                   </div>
                 </motion.div>
               );
             })}
 
-            <div className="flex items-center gap-1.5 pt-0.5">
+            <div className="flex items-center gap-1.5 pt-1">
               <div className="flex -space-x-1">
                 {meals.slice(0, 5).map((_, i) => (
                   <div
