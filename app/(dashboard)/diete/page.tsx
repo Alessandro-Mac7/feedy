@@ -8,6 +8,7 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { cn } from "@/lib/utils";
 import type { Diet } from "@/types";
 import { useToast } from "@/components/toast";
+import { EmptyDiets } from "@/components/illustrations/empty-diets";
 
 export default function DietePage() {
   const [diets, setDiets] = useState<Diet[]>([]);
@@ -77,6 +78,26 @@ export default function DietePage() {
 
       <DietUpload onUploaded={loadDiets} />
 
+      <Link
+        href="/diete/nuova"
+        className="inline-flex items-center gap-2 rounded-xl glass px-4 py-2.5 text-sm font-semibold text-primary hover:bg-white/20 transition-colors"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Crea manualmente
+      </Link>
+
       {loading ? (
         <div className="space-y-3">
           {[1, 2].map((i) => (
@@ -89,13 +110,8 @@ export default function DietePage() {
           animate={{ opacity: 1 }}
           className="glass rounded-2xl py-14 text-center"
         >
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/40">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-foreground-muted">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-              <path d="M14 2v6h6" />
-              <line x1="12" y1="11" x2="12" y2="17" />
-              <line x1="9" y1="14" x2="15" y2="14" />
-            </svg>
+          <div className="mx-auto mb-3 text-foreground-muted">
+            <EmptyDiets />
           </div>
           <p className="text-foreground-muted font-medium mb-0.5">Nessuna dieta</p>
           <p className="text-foreground-muted/60 text-sm">

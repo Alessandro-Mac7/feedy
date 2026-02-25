@@ -17,9 +17,12 @@ function getStorageKey(day: string): string {
 
 interface WaterTrackerCardProps {
   dayLabel: string;
+  goalGlasses?: number;
+  onGoalReached?: () => void;
 }
 
-export function WaterTrackerCard({ dayLabel }: WaterTrackerCardProps) {
+export function WaterTrackerCard({ dayLabel, goalGlasses, onGoalReached }: WaterTrackerCardProps) {
+  const totalGlasses = goalGlasses ?? GLASSES;
   const [filled, setFilled] = useState(0);
   const [animDir, setAnimDir] = useState<"up" | "down" | null>(null);
   const storageKey = getStorageKey(dayLabel);
@@ -28,7 +31,7 @@ export function WaterTrackerCard({ dayLabel }: WaterTrackerCardProps) {
     const saved = localStorage.getItem(storageKey);
     if (saved !== null) {
       const val = parseInt(saved, 10);
-      if (!isNaN(val) && val >= 0 && val <= GLASSES) {
+      if (!isNaN(val) && val >= 0 && val <= totalGlasses) {
         setFilled(val);
       }
     } else {
@@ -37,13 +40,14 @@ export function WaterTrackerCard({ dayLabel }: WaterTrackerCardProps) {
   }, [storageKey]);
 
   const handleAdd = useCallback(() => {
-    if (filled >= GLASSES) return;
+    if (filled >= totalGlasses) return;
     setAnimDir("up");
     const next = filled + 1;
     setFilled(next);
     localStorage.setItem(storageKey, String(next));
+    if (next >= totalGlasses) onGoalReached?.();
     setTimeout(() => setAnimDir(null), 600);
-  }, [filled, storageKey]);
+  }, [filled, storageKey, totalGlasses, onGoalReached]);
 
   const handleRemove = useCallback(() => {
     if (filled <= 0) return;
@@ -52,11 +56,12 @@ export function WaterTrackerCard({ dayLabel }: WaterTrackerCardProps) {
     setFilled(next);
     localStorage.setItem(storageKey, String(next));
     setTimeout(() => setAnimDir(null), 600);
-  }, [filled, storageKey]);
+  }, [filled, storageKey, totalGlasses]);
 
+  const targetMl = totalGlasses * ML_PER_GLASS;
   const ml = filled * ML_PER_GLASS;
-  const pct = (ml / TARGET_ML) * 100;
-  const isComplete = filled >= GLASSES;
+  const pct = (ml / targetMl) * 100;
+  const isComplete = filled >= totalGlasses;
 
   const mlText =
     ml >= 1000
@@ -131,7 +136,7 @@ export function WaterTrackerCard({ dayLabel }: WaterTrackerCardProps) {
 
             {/* Graduation marks */}
             {[2, 4, 6].map((level) => {
-              const markY = botY - (level / GLASSES) * innerH;
+              const markY = botY - (level / totalGlasses) * innerH;
               const xInsetL = tL + ((bL - tL) * (botY - markY)) / innerH;
               const xInsetR = tR - ((tR - bR) * (botY - markY)) / innerH;
               return (
@@ -272,7 +277,7 @@ export function WaterTrackerCard({ dayLabel }: WaterTrackerCardProps) {
         <motion.button
           type="button"
           onClick={handleAdd}
-          disabled={filled >= GLASSES}
+          disabled={filled >= totalGlasses}
           whileTap={{ scale: 0.85 }}
           className="flex h-9 w-9 items-center justify-center rounded-full glass-subtle text-foreground-muted disabled:opacity-20 transition-opacity"
           aria-label="Aggiungi bicchiere"
@@ -302,7 +307,7 @@ export function WaterTrackerCard({ dayLabel }: WaterTrackerCardProps) {
             className="text-base font-bold tabular-nums leading-none"
             style={{ color: isComplete ? "#2D9F8F" : "#4A9BD9" }}
           >
-            {filled}/{GLASSES}
+            {filled}/{totalGlasses}
           </motion.span>
         </AnimatePresence>
         <span className="text-[10px] text-foreground-muted/60 mt-1">

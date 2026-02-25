@@ -42,7 +42,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="it" className="light" suppressHydrationWarning>
+    <html lang="it" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("feedy-theme");var d=document.documentElement;if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches)){d.classList.add("dark")}else{d.classList.add("light")}}catch(e){d.classList.add("light")}})()`,
+          }}
+        />
+      </head>
       <body className={`${dmSans.variable} ${dmSerif.variable} antialiased`}>
         <AuthProvider>
           {children}

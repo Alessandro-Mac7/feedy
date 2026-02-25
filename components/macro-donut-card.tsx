@@ -12,11 +12,19 @@ const MACROS = [
   { key: "proteins" as const, label: "Prot", color: "#B86B4F" },
 ];
 
-interface MacroDonutCardProps {
-  meals: Meal[];
+interface MacroGoals {
+  dailyKcal?: number;
+  dailyCarbs?: number;
+  dailyFats?: number;
+  dailyProteins?: number;
 }
 
-export function MacroDonutCard({ meals }: MacroDonutCardProps) {
+interface MacroDonutCardProps {
+  meals: Meal[];
+  goals?: MacroGoals;
+}
+
+export function MacroDonutCard({ meals, goals }: MacroDonutCardProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const totals = meals.reduce(
@@ -84,13 +92,18 @@ export function MacroDonutCard({ meals }: MacroDonutCardProps) {
   }
 
   const activeMacro = activeIndex !== null ? MACROS[activeIndex] : null;
+  const goalPct = goals?.dailyKcal && kcal > 0
+    ? Math.round((kcal / goals.dailyKcal) * 100)
+    : null;
   const centerColor = activeMacro ? activeMacro.color : "var(--foreground)";
   const centerValue = activeMacro
     ? `${percentages[activeMacro.key]}%`
     : String(kcal);
   const centerSub = activeMacro
     ? `${activeMacro.label} · ${totals[activeMacro.key]}g`
-    : "kcal";
+    : goalPct !== null
+      ? `${goalPct}% obiettivo`
+      : "kcal";
 
   if (!hasAny) {
     return (
@@ -123,7 +136,7 @@ export function MacroDonutCard({ meals }: MacroDonutCardProps) {
             cy={center}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.15)"
+            stroke="var(--donut-track)"
             strokeWidth="8"
           />
           {segments.map((seg, i) => {

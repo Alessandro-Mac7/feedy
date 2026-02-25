@@ -15,6 +15,12 @@ import Link from "next/link";
 import { useToast } from "@/components/toast";
 import { OverlayLoader } from "@/components/page-loader";
 import { AiConsentDialog } from "@/components/ai-consent-dialog";
+import { EmptyPlate } from "@/components/illustrations/empty-plate";
+import { EmptyDay } from "@/components/illustrations/empty-day";
+import { Confetti } from "@/components/confetti";
+import { WeeklyStatsCard } from "@/components/weekly-stats-card";
+import { WeeklyBarChart } from "@/components/weekly-bar-chart";
+import { ShoppingList } from "@/components/shopping-list";
 
 interface DietWithMeals extends Diet {
   meals: Meal[];
@@ -26,6 +32,10 @@ export default function OggiPage() {
   const [loading, setLoading] = useState(true);
   const [estimating, setEstimating] = useState<string | null>(null);
   const [pendingMealId, setPendingMealId] = useState<string | null>(null);
+  const [goals, setGoals] = useState<{ dailyKcal?: number; dailyCarbs?: number; dailyFats?: number; dailyProteins?: number; dailyWater?: number } | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [viewMode, setViewMode] = useState<"day" | "week">("day");
+  const [showShoppingList, setShowShoppingList] = useState(false);
   const { toast } = useToast();
 
   const loadActiveDiet = useCallback(async () => {
@@ -51,6 +61,10 @@ export default function OggiPage() {
 
   useEffect(() => {
     loadActiveDiet();
+    fetch("/api/goals")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setGoals(data); })
+      .catch(() => {});
   }, [loadActiveDiet]);
 
   function handleEstimateMacros(mealId: string) {
@@ -71,6 +85,36 @@ export default function OggiPage() {
   function handleAiConsentCancel() {
     setPendingMealId(null);
     toast("Stima annullata", "info");
+  }
+
+  async function handleToggleComplete(mealId: string) {
+    if (!diet) return;
+    const updatedMeals = diet.meals.map((m) =>
+      m.id === mealId ? { ...m, isCompleted: !m.isCompleted } : m
+    );
+    // Optimistic update
+    setDiet({ ...diet, meals: updatedMeals });
+    // Check if all day meals are now completed
+    const updatedDayMeals = updatedMeals.filter((m) => m.day === selectedDay);
+    if (updatedDayMeals.length > 0 && updatedDayMeals.every((m) => m.isCompleted)) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 100);
+    }
+    try {
+      const res = await fetch(`/api/meals/${mealId}/complete`, { method: "POST" });
+      if (!res.ok) {
+        setDiet({ ...diet, meals: diet.meals });
+        toast("Errore nell'aggiornamento", "error");
+      }
+    } catch {
+      setDiet({ ...diet, meals: diet.meals });
+      toast("Errore di connessione", "error");
+    }
+  }
+
+  function handleWaterGoalReached() {
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 100);
   }
 
   async function doEstimate(mealId: string) {
@@ -140,8 +184,8 @@ export default function OggiPage() {
         transition={{ duration: 0.5 }}
         className="flex flex-col items-center justify-center py-20 text-center"
       >
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl glass">
-          <span className="text-4xl">🍽️</span>
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl glass text-foreground-muted">
+          <EmptyPlate />
         </div>
         <h2 className="font-display text-2xl text-foreground mb-2">
           Nessuna dieta attiva
@@ -161,6 +205,8 @@ export default function OggiPage() {
 
   return (
     <div className="space-y-5">
+      <Confetti trigger={showConfetti} />
+      <ShoppingList meals={diet.meals} open={showShoppingList} onClose={() => setShowShoppingList(false)} />
       <AiConsentDialog
         open={pendingMealId !== null}
         onAccept={handleAiConsentAccept}
@@ -191,56 +237,111 @@ export default function OggiPage() {
         )}
       </motion.div>
 
-      {/* Day selector */}
-      <DayTabs selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+      {/* View mode toggle */}
+      <div className="flex gap-1 p-1 rounded-xl glass-subtle self-center mx-auto w-fit">
+        {(["day", "week"] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => setViewMode(mode)}
+            className={`relative rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${
+              viewMode === mode ? "text-primary" : "text-foreground-muted"
+            }`}
+          >
+            {viewMode === mode && (
+              <motion.div
+                layoutId="view-pill"
+                className="absolute inset-0 rounded-lg glass"
+                transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+              />
+            )}
+            <span className="relative z-10">{mode === "day" ? "Giorno" : "Settimana"}</span>
+          </button>
+        ))}
+      </div>
 
-      {/* Day content — crossfades on day switch */}
-      <AnimatePresence mode="wait">
+      {viewMode === "day" ? (
+        <>
+          {/* Day selector */}
+          <DayTabs selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+
+          {/* Day content — crossfades on day switch */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedDay}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: "easeInOut" }}
+              className="space-y-5"
+            >
+              <DailySummaryCard
+                meals={dayMeals}
+                dayLabel={selectedDay}
+                dietName={diet.dietName}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <MacroDonutCard meals={dayMeals} goals={goals ?? undefined} />
+                <WaterTrackerCard dayLabel={selectedDay} goalGlasses={goals?.dailyWater} onGoalReached={handleWaterGoalReached} />
+              </div>
+
+              {dayMeals.length === 0 ? (
+                <div className="glass rounded-2xl py-12 flex flex-col items-center text-center">
+                  <EmptyDay className="text-foreground-muted mb-3" />
+                  <p className="text-foreground-muted">Nessun pasto per {selectedDay}</p>
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3 px-1">
+                    Pasti del giorno
+                  </h2>
+                  <div className="space-y-3">
+                    {dayMeals.map((meal, i) => (
+                      <MealCard
+                        key={meal.id}
+                        meal={meal}
+                        index={i}
+                        isHighlighted={isToday && meal.mealType === currentMealType}
+                        onEstimateMacros={
+                          estimating === meal.id ? undefined : handleEstimateMacros
+                        }
+                        onToggleComplete={handleToggleComplete}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Shopping list button */}
+              <motion.button
+                type="button"
+                onClick={() => setShowShoppingList(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.96 }}
+                className="mt-2 w-full rounded-2xl glass-subtle px-4 py-3 text-sm font-semibold text-foreground-muted hover:text-foreground transition-colors flex items-center justify-center gap-2"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                Lista spesa
+              </motion.button>
+            </motion.div>
+          </AnimatePresence>
+        </>
+      ) : (
         <motion.div
-          key={selectedDay}
+          key="week"
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.18, ease: "easeInOut" }}
-          className="space-y-5"
+          className="space-y-4"
         >
-          <DailySummaryCard
-            meals={dayMeals}
-            dayLabel={selectedDay}
-            dietName={diet.dietName}
-          />
-
-          <div className="grid grid-cols-2 gap-3">
-            <MacroDonutCard meals={dayMeals} />
-            <WaterTrackerCard dayLabel={selectedDay} />
-          </div>
-
-          {dayMeals.length === 0 ? (
-            <div className="glass rounded-2xl py-12 text-center">
-              <p className="text-foreground-muted">Nessun pasto per {selectedDay}</p>
-            </div>
-          ) : (
-            <>
-              <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3 px-1">
-                Pasti del giorno
-              </h2>
-              <div className="space-y-3">
-                {dayMeals.map((meal, i) => (
-                  <MealCard
-                    key={meal.id}
-                    meal={meal}
-                    index={i}
-                    isHighlighted={isToday && meal.mealType === currentMealType}
-                    onEstimateMacros={
-                      estimating === meal.id ? undefined : handleEstimateMacros
-                    }
-                  />
-                ))}
-              </div>
-            </>
-          )}
+          <WeeklyStatsCard meals={diet.meals} />
+          <WeeklyBarChart meals={diet.meals} goalKcal={goals?.dailyKcal} />
         </motion.div>
-      </AnimatePresence>
+      )}
     </div>
   );
 }

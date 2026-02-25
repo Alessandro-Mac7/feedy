@@ -1,10 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "motion/react";
 import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/toast";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+interface Goals {
+  dailyKcal: number;
+  dailyCarbs: number;
+  dailyFats: number;
+  dailyProteins: number;
+  dailyWater: number;
+}
+
+const DEFAULT_GOALS: Goals = {
+  dailyKcal: 2000,
+  dailyCarbs: 250,
+  dailyFats: 65,
+  dailyProteins: 75,
+  dailyWater: 8,
+};
 
 export default function ImpostazioniPage() {
   const session = authClient.useSession();
@@ -12,7 +29,49 @@ export default function ImpostazioniPage() {
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [goals, setGoals] = useState<Goals>(DEFAULT_GOALS);
+  const [savingGoals, setSavingGoals] = useState(false);
   const { toast } = useToast();
+
+  const loadGoals = useCallback(async () => {
+    try {
+      const res = await fetch("/api/goals");
+      if (res.ok) {
+        const data = await res.json();
+        setGoals({
+          dailyKcal: data.dailyKcal ?? DEFAULT_GOALS.dailyKcal,
+          dailyCarbs: data.dailyCarbs ?? DEFAULT_GOALS.dailyCarbs,
+          dailyFats: data.dailyFats ?? DEFAULT_GOALS.dailyFats,
+          dailyProteins: data.dailyProteins ?? DEFAULT_GOALS.dailyProteins,
+          dailyWater: data.dailyWater ?? DEFAULT_GOALS.dailyWater,
+        });
+      }
+    } catch { /* use defaults */ }
+  }, []);
+
+  useEffect(() => {
+    loadGoals();
+  }, [loadGoals]);
+
+  async function handleSaveGoals() {
+    setSavingGoals(true);
+    try {
+      const res = await fetch("/api/goals", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(goals),
+      });
+      if (res.ok) {
+        toast("Obiettivi salvati", "success");
+      } else {
+        toast("Errore nel salvataggio", "error");
+      }
+    } catch {
+      toast("Errore di connessione", "error");
+    } finally {
+      setSavingGoals(false);
+    }
+  }
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -110,6 +169,57 @@ export default function ImpostazioniPage() {
         ) : (
           <p className="text-sm text-foreground-muted">Non autenticato</p>
         )}
+      </motion.div>
+
+      {/* Theme */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="glass rounded-2xl p-5"
+      >
+        <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3">Tema</h2>
+        <ThemeToggle />
+      </motion.div>
+
+      {/* Goals */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.09 }}
+        className="glass rounded-2xl p-5"
+      >
+        <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3">Obiettivi giornalieri</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { key: "dailyKcal" as const, label: "Kcal", unit: "kcal" },
+            { key: "dailyCarbs" as const, label: "Carboidrati", unit: "g" },
+            { key: "dailyFats" as const, label: "Grassi", unit: "g" },
+            { key: "dailyProteins" as const, label: "Proteine", unit: "g" },
+            { key: "dailyWater" as const, label: "Bicchieri acqua", unit: "" },
+          ].map((field) => (
+            <div key={field.key} className={field.key === "dailyWater" ? "col-span-2" : ""}>
+              <label className="text-[11px] font-medium text-foreground-muted mb-1 block">
+                {field.label} {field.unit && <span className="text-foreground-muted/50">({field.unit})</span>}
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={goals[field.key]}
+                onChange={(e) => setGoals({ ...goals, [field.key]: parseInt(e.target.value) || 0 })}
+                className="w-full rounded-xl glass-input px-3 py-2.5 text-sm font-medium text-foreground tabular-nums"
+              />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={handleSaveGoals}
+          disabled={savingGoals}
+          className="mt-4 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-light transition-colors disabled:opacity-60"
+        >
+          {savingGoals ? "Salvataggio..." : "Salva obiettivi"}
+        </button>
       </motion.div>
 
       {/* Actions */}
