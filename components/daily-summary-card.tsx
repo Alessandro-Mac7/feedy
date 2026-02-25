@@ -6,48 +6,17 @@ import type { Meal } from "@/types";
 const KCAL_PER_G_CARBS = 4;
 const KCAL_PER_G_FATS = 9;
 const KCAL_PER_G_PROTEINS = 4;
-const TARGET_KCAL_DEFAULT = 2000;
+
+const MACROS = [
+  { key: "carbs" as const, label: "Carb", color: "#4A8AC4" },
+  { key: "fats" as const, label: "Grassi", color: "#C9A033" },
+  { key: "proteins" as const, label: "Proteine", color: "#B86B4F" },
+];
 
 interface DailySummaryCardProps {
   meals: Meal[];
   dayLabel?: string;
   dietName?: string;
-}
-
-function MacroRow({
-  label,
-  value,
-  color,
-  max,
-  delay,
-}: {
-  label: string;
-  value: number;
-  color: string;
-  max: number;
-  delay: number;
-}) {
-  const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
-
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-[11px] font-semibold uppercase tracking-wider w-10" style={{ color }}>
-        {label}
-      </span>
-      <div className="flex-1 h-2 rounded-full bg-white/20 overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ delay, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="h-full rounded-full"
-          style={{ background: `linear-gradient(90deg, ${color}, ${color}dd)` }}
-        />
-      </div>
-      <span className="text-sm font-bold tabular-nums w-12 text-right" style={{ color }}>
-        {value}g
-      </span>
-    </div>
-  );
 }
 
 export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCardProps) {
@@ -60,18 +29,45 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     { carbs: 0, fats: 0, proteins: 0 }
   );
 
-  const kcal = totals.carbs * KCAL_PER_G_CARBS + totals.fats * KCAL_PER_G_FATS + totals.proteins * KCAL_PER_G_PROTEINS;
-  const hasAny = totals.carbs > 0 || totals.fats > 0 || totals.proteins > 0;
+  const kcalCarbs = totals.carbs * KCAL_PER_G_CARBS;
+  const kcalFats = totals.fats * KCAL_PER_G_FATS;
+  const kcalProteins = totals.proteins * KCAL_PER_G_PROTEINS;
+  const kcal = kcalCarbs + kcalFats + kcalProteins;
+  const hasAny = kcal > 0;
 
-  // SVG circular progress
-  const radius = 52;
+  const pctCarbs = hasAny ? Math.round((kcalCarbs / kcal) * 100) : 0;
+  const pctFats = hasAny ? Math.round((kcalFats / kcal) * 100) : 0;
+  const pctProteins = hasAny ? 100 - pctCarbs - pctFats : 0;
+
+  const percentages = { carbs: pctCarbs, fats: pctFats, proteins: pctProteins };
+
+  // Donut geometry
+  const size = 120;
+  const center = size / 2;
+  const radius = 46;
   const circumference = 2 * Math.PI * radius;
-  const targetKcal = TARGET_KCAL_DEFAULT;
-  const progress = Math.min(kcal / targetKcal, 1);
+  const gap = 3; // gap in px between segments
 
-  // Find max macro for proportional bars
-  const macroMax = Math.max(totals.carbs, totals.fats, totals.proteins, 1);
-  const barMax = macroMax * 1.3;
+  // Build donut segments
+  const segments: { color: string; length: number; offset: number }[] = [];
+  if (hasAny) {
+    let currentOffset = 0;
+    const activeSegments = MACROS.filter((m) => percentages[m.key] > 0);
+    const gapTotal = activeSegments.length * gap;
+    const availableLength = circumference - gapTotal;
+
+    for (const macro of MACROS) {
+      const pct = percentages[macro.key];
+      if (pct <= 0) continue;
+      const segmentLength = (pct / 100) * availableLength;
+      segments.push({
+        color: macro.color,
+        length: segmentLength,
+        offset: currentOffset,
+      });
+      currentOffset += segmentLength + gap;
+    }
+  }
 
   const completedMeals = meals.filter(
     (m) => m.carbs !== null || m.fats !== null || m.proteins !== null
@@ -98,38 +94,42 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
 
       {hasAny ? (
         <div className="flex items-center gap-5">
-          {/* Circular ring */}
+          {/* Donut chart */}
           <div className="relative shrink-0">
-            <svg width="124" height="124" viewBox="0 0 124 124">
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+              {/* Background track */}
               <circle
-                cx="62"
-                cy="62"
+                cx={center}
+                cy={center}
                 r={radius}
                 fill="none"
-                stroke="rgba(255,255,255,0.2)"
-                strokeWidth="8"
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="10"
               />
-              <motion.circle
-                cx="62"
-                cy="62"
-                r={radius}
-                fill="none"
-                stroke="url(#kcal-gradient)"
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                initial={{ strokeDashoffset: circumference }}
-                animate={{ strokeDashoffset: circumference * (1 - progress) }}
-                transition={{ delay: 0.2, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                transform="rotate(-90 62 62)"
-              />
-              <defs>
-                <linearGradient id="kcal-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#2D9F8F" />
-                  <stop offset="100%" stopColor="#3BB5A4" />
-                </linearGradient>
-              </defs>
+              {/* Macro segments */}
+              {segments.map((seg, i) => (
+                <motion.circle
+                  key={i}
+                  cx={center}
+                  cy={center}
+                  r={radius}
+                  fill="none"
+                  stroke={seg.color}
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                  initial={{ strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset: -seg.offset }}
+                  transition={{
+                    delay: 0.2 + i * 0.15,
+                    duration: 1,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  transform={`rotate(-90 ${center} ${center})`}
+                />
+              ))}
             </svg>
+            {/* Center text */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <motion.span
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -145,29 +145,42 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
             </div>
           </div>
 
-          {/* Macro bars */}
-          <div className="flex-1 space-y-2.5">
-            <MacroRow
-              label="Carb"
-              value={totals.carbs}
-              color="#4A8AC4"
-              max={barMax}
-              delay={0.3}
-            />
-            <MacroRow
-              label="Grassi"
-              value={totals.fats}
-              color="#C9A033"
-              max={barMax}
-              delay={0.4}
-            />
-            <MacroRow
-              label="Prot"
-              value={totals.proteins}
-              color="#B86B4F"
-              max={barMax}
-              delay={0.5}
-            />
+          {/* Macro legend with percentages */}
+          <div className="flex-1 space-y-3">
+            {MACROS.map((macro, i) => {
+              const grams = totals[macro.key];
+              const pct = percentages[macro.key];
+              return (
+                <motion.div
+                  key={macro.key}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
+                  className="flex items-center gap-2.5"
+                >
+                  <div
+                    className="h-3 w-3 rounded-full shrink-0"
+                    style={{ backgroundColor: macro.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-xs font-semibold text-foreground">
+                        {macro.label}
+                      </span>
+                      <span
+                        className="text-lg font-bold tabular-nums leading-none"
+                        style={{ color: macro.color }}
+                      >
+                        {pct}%
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-foreground-muted tabular-nums">
+                      {grams}g
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
 
             {/* Meal count */}
             <div className="flex items-center gap-1.5 pt-1">
