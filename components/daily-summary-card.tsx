@@ -11,7 +11,7 @@ const KCAL_PER_G_PROTEINS = 4;
 const MACROS = [
   { key: "carbs" as const, label: "Carb", color: "#4A8AC4" },
   { key: "fats" as const, label: "Grassi", color: "#C9A033" },
-  { key: "proteins" as const, label: "Proteine", color: "#B86B4F" },
+  { key: "proteins" as const, label: "Prot", color: "#B86B4F" },
 ];
 
 const WATER_GLASSES = 8;
@@ -37,7 +37,6 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
 
   // Water state
   const [waterFilled, setWaterFilled] = useState(0);
-  const [lastTapped, setLastTapped] = useState<number | null>(null);
   const waterKey = dayLabel ? getWaterStorageKey(dayLabel) : "";
 
   useEffect(() => {
@@ -57,9 +56,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     (index: number) => {
       const newFilled = index + 1 === waterFilled ? index : index + 1;
       setWaterFilled(newFilled);
-      setLastTapped(index);
       if (waterKey) localStorage.setItem(waterKey, String(newFilled));
-      setTimeout(() => setLastTapped(null), 400);
     },
     [waterFilled, waterKey]
   );
@@ -95,9 +92,9 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
   const percentages = { carbs: pctCarbs, fats: pctFats, proteins: pctProteins };
 
   // Donut geometry
-  const size = 120;
+  const size = 100;
   const center = size / 2;
-  const radius = 44;
+  const radius = 36;
   const circumference = 2 * Math.PI * radius;
   const gap = 3;
 
@@ -161,53 +158,33 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     (m) => m.carbs !== null || m.fats !== null || m.proteins !== null
   ).length;
 
-  // ── Water drops grid ──
-  function WaterDropsGrid({ compact = false }: { compact?: boolean }) {
-    const dropW = compact ? 22 : 26;
-    const dropH = compact ? 28 : 32;
-
+  // ── Water drops section ──
+  function WaterDrops() {
     return (
-      <div className="flex flex-col items-center gap-2">
-        {/* Header */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm">💧</span>
-          <span className="text-[10px] font-semibold text-foreground-muted uppercase tracking-wider">
-            Acqua
-          </span>
-        </div>
+      <div className="flex flex-col items-center gap-1.5">
+        {/* Emoji header */}
+        <span className="text-base leading-none">💧</span>
 
         {/* 4×2 drop grid */}
         <div className="grid grid-cols-4 gap-1">
           {Array.from({ length: WATER_GLASSES }).map((_, i) => {
             const isFilled = i < waterFilled;
-            const isJustTapped = i === lastTapped;
             return (
-              <button
+              <motion.button
                 key={i}
                 type="button"
                 onClick={() => handleDropTap(i)}
-                className="flex items-center justify-center min-h-[36px] min-w-[28px]"
+                className="flex items-center justify-center"
+                whileTap={{ scale: 0.75 }}
+                transition={{ type: "spring", stiffness: 500, damping: 20 }}
                 aria-label={`Bicchiere ${i + 1} di ${WATER_GLASSES}`}
               >
-                <motion.svg
-                  width={dropW}
-                  height={dropH}
-                  viewBox="0 0 26 32"
-                  initial={false}
-                  animate={{
-                    scale: isJustTapped ? [1, 1.35, 1] : 1,
-                    y: isJustTapped ? [0, -3, 0] : 0,
-                  }}
-                  transition={{
-                    duration: 0.4,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                >
+                <svg width="22" height="28" viewBox="0 0 26 32">
                   <defs>
                     <linearGradient
-                      id={`drop-fill-${i}`}
+                      id={`wdrop-${i}`}
                       x1="13"
-                      y1="1"
+                      y1="2"
                       x2="13"
                       y2="28"
                     >
@@ -217,48 +194,46 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                   </defs>
                   <path
                     d="M13 2C13 2 3 12 3 18.5C3 23.5 7.5 28 13 28C18.5 28 23 23.5 23 18.5C23 12 13 2 13 2Z"
-                    fill={isFilled ? `url(#drop-fill-${i})` : "none"}
+                    fill={isFilled ? `url(#wdrop-${i})` : "none"}
                     stroke={isFilled ? "#4A9BD9" : "rgba(74,155,217,0.3)"}
                     strokeWidth="1.5"
                     strokeDasharray={isFilled ? "none" : "3 2"}
+                    className="transition-colors duration-200"
                   />
                   {isFilled && (
-                    <motion.ellipse
+                    <ellipse
                       cx="9"
                       cy="17"
                       rx="2"
                       ry="3.5"
-                      fill="rgba(255,255,255,0.35)"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.1 }}
+                      fill="rgba(255,255,255,0.3)"
                       transform="rotate(-15 9 17)"
                     />
                   )}
-                </motion.svg>
-              </button>
+                </svg>
+              </motion.button>
             );
           })}
         </div>
 
-        {/* Amount label */}
-        <div className="flex items-baseline gap-1">
+        {/* Amount */}
+        <div className="flex items-baseline gap-0.5">
           <motion.span
             key={waterMl}
-            initial={{ scale: 1.15 }}
+            initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
-            className="text-sm font-bold tabular-nums leading-none"
+            className="text-[11px] font-bold tabular-nums leading-none"
             style={{ color: waterComplete ? "#2D9F8F" : "#4A9BD9" }}
           >
             {waterText}
           </motion.span>
-          <span className="text-[9px] text-foreground-muted/60">/ 2L</span>
+          <span className="text-[8px] text-foreground-muted/60">/ 2L</span>
           {waterComplete && (
             <motion.span
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
               transition={{ type: "spring", bounce: 0.5 }}
-              className="text-xs"
+              className="text-[10px] ml-0.5"
             >
               ✓
             </motion.span>
@@ -303,104 +278,82 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
       )}
 
       {hasAny ? (
-        <div className="space-y-4">
-          {/* Top row: Donut (60%) + Water drops (40%) */}
-          <div className="flex items-center gap-4">
-            {/* Donut chart */}
-            <div className={`${dayLabel ? "flex-[3]" : "flex-1"} flex justify-center`}>
-              <div
-                className="relative cursor-pointer"
-                onClick={handleDonutTap}
-              >
-                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                  <circle
+        <div className="flex items-start gap-2.5">
+          {/* Donut chart */}
+          <div
+            className="relative shrink-0 cursor-pointer"
+            onClick={handleDonutTap}
+          >
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+              <circle
+                cx={center}
+                cy={center}
+                r={radius}
+                fill="none"
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="8"
+              />
+              {segments.map((seg, i) => {
+                const isHighlighted = activeIndex === null || activeIndex === seg.macroIndex;
+                return (
+                  <motion.circle
+                    key={seg.key}
                     cx={center}
                     cy={center}
                     r={radius}
                     fill="none"
-                    stroke="rgba(255,255,255,0.15)"
-                    strokeWidth="10"
+                    stroke={seg.color}
+                    strokeLinecap="round"
+                    strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                    initial={{ strokeDashoffset: circumference, strokeWidth: 8 }}
+                    animate={{
+                      strokeDashoffset: -seg.offset,
+                      strokeWidth: activeIndex === seg.macroIndex ? 12 : 8,
+                      opacity: isHighlighted ? 1 : 0.3,
+                    }}
+                    transition={{
+                      strokeDashoffset: {
+                        delay: 0.2 + i * 0.15,
+                        duration: 1,
+                        ease: [0.22, 1, 0.36, 1],
+                      },
+                      strokeWidth: { duration: 0.3, ease: "easeOut" },
+                      opacity: { duration: 0.3 },
+                    }}
+                    transform={`rotate(-90 ${center} ${center})`}
                   />
-                  {segments.map((seg, i) => {
-                    const isHighlighted = activeIndex === null || activeIndex === seg.macroIndex;
-                    return (
-                      <motion.circle
-                        key={seg.key}
-                        cx={center}
-                        cy={center}
-                        r={radius}
-                        fill="none"
-                        stroke={seg.color}
-                        strokeLinecap="round"
-                        strokeDasharray={`${seg.length} ${circumference - seg.length}`}
-                        initial={{ strokeDashoffset: circumference, strokeWidth: 10 }}
-                        animate={{
-                          strokeDashoffset: -seg.offset,
-                          strokeWidth: activeIndex === seg.macroIndex ? 14 : 10,
-                          opacity: isHighlighted ? 1 : 0.3,
-                        }}
-                        transition={{
-                          strokeDashoffset: {
-                            delay: 0.2 + i * 0.15,
-                            duration: 1,
-                            ease: [0.22, 1, 0.36, 1],
-                          },
-                          strokeWidth: { duration: 0.3, ease: "easeOut" },
-                          opacity: { duration: 0.3 },
-                        }}
-                        transform={`rotate(-90 ${center} ${center})`}
-                      />
-                    );
-                  })}
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeIndex ?? "kcal"}
-                      initial={{ opacity: 0, scale: 0.85 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.85 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex flex-col items-center"
-                    >
-                      <span
-                        className="text-xl font-bold tabular-nums leading-none"
-                        style={{ color: centerColor }}
-                      >
-                        {centerValue}
-                      </span>
-                      <span
-                        className="text-[9px] font-medium uppercase tracking-wider mt-0.5"
-                        style={{ color: activeMacro ? activeMacro.color : "var(--foreground-muted)" }}
-                      >
-                        {centerSub}
-                      </span>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-                {activeIndex === null && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.5, duration: 0.5 }}
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2"
+                );
+              })}
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeIndex ?? "kcal"}
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center"
+                >
+                  <span
+                    className="text-lg font-bold tabular-nums leading-none"
+                    style={{ color: centerColor }}
                   >
-                    <span className="text-[9px] text-foreground-muted/50">tap</span>
-                  </motion.div>
-                )}
-              </div>
+                    {centerValue}
+                  </span>
+                  <span
+                    className="text-[8px] font-medium uppercase tracking-wider mt-0.5"
+                    style={{ color: activeMacro ? activeMacro.color : "var(--foreground-muted)" }}
+                  >
+                    {centerSub}
+                  </span>
+                </motion.div>
+              </AnimatePresence>
             </div>
-
-            {/* Water drops — 40% */}
-            {dayLabel && (
-              <div className="flex-[2] min-w-0">
-                <WaterDropsGrid />
-              </div>
-            )}
           </div>
 
-          {/* Full-width macro bars */}
-          <div className="space-y-2">
+          {/* Macro legend — compact */}
+          <div className="flex-1 min-w-0 space-y-1.5 pt-0.5">
             {MACROS.map((macro, i) => {
               const grams = totals[macro.key];
               const pct = percentages[macro.key];
@@ -409,50 +362,45 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
               return (
                 <motion.div
                   key={macro.key}
-                  initial={{ opacity: 0, x: 10 }}
+                  initial={{ opacity: 0, x: 8 }}
                   animate={{
                     opacity: activeIndex === null || isActive ? 1 : 0.4,
                     x: 0,
-                    scale: isActive ? 1.01 : 1,
                   }}
                   transition={{ delay: 0.3 + i * 0.1, duration: 0.3 }}
                   className="cursor-pointer"
                   onClick={() => setActiveIndex(isActive ? null : i)}
                 >
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                    <div className="flex items-center gap-1 min-w-0">
                       <div
-                        className="h-2 w-2 rounded-full shrink-0 transition-transform"
-                        style={{
-                          backgroundColor: macro.color,
-                          transform: isActive ? "scale(1.3)" : "scale(1)",
-                        }}
+                        className="h-1.5 w-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: macro.color }}
                       />
-                      <span className="text-[11px] font-semibold text-foreground">
+                      <span className="text-[10px] font-semibold text-foreground truncate">
                         {macro.label}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] text-foreground-muted tabular-nums">
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-[9px] text-foreground-muted tabular-nums">
                         {grams}g
                       </span>
                       <span
-                        className="text-[10px] font-bold tabular-nums"
+                        className="text-[9px] font-bold tabular-nums"
                         style={{ color: macro.color }}
                       >
                         {pct}%
                       </span>
                     </div>
                   </div>
-                  {/* Progress bar */}
-                  <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-1 rounded-full bg-white/10 overflow-hidden">
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: macro.color }}
                       initial={{ width: 0 }}
                       animate={{
                         width: `${pct}%`,
-                        opacity: isActive ? 1 : 0.65,
+                        opacity: isActive ? 1 : 0.6,
                       }}
                       transition={{
                         width: { delay: 0.4 + i * 0.12, duration: 0.8, ease: [0.22, 1, 0.36, 1] },
@@ -464,7 +412,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
               );
             })}
 
-            <div className="flex items-center gap-1.5 pt-0.5">
+            <div className="flex items-center gap-1 pt-0.5">
               <div className="flex -space-x-1">
                 {meals.slice(0, 5).map((_, i) => (
                   <div
@@ -475,11 +423,18 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                   />
                 ))}
               </div>
-              <span className="text-[10px] text-foreground-muted">
+              <span className="text-[9px] text-foreground-muted">
                 {completedMeals}/{meals.length} pasti
               </span>
             </div>
           </div>
+
+          {/* Water drops — right side */}
+          {dayLabel && (
+            <div className="shrink-0">
+              <WaterDrops />
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -499,8 +454,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
             </div>
           )}
 
-          {/* Water drops even without macros */}
-          {dayLabel && <WaterDropsGrid compact />}
+          {dayLabel && <WaterDrops />}
         </div>
       )}
     </motion.div>
