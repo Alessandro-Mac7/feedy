@@ -12,6 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "@/components/toast";
 import { OverlayLoader } from "@/components/page-loader";
+import { WaterTracker } from "@/components/water-tracker";
 
 interface DietWithMeals extends Diet {
   meals: Meal[];
@@ -180,6 +181,8 @@ export default function OggiPage() {
             dayLabel={selectedDay}
             dietName={diet.dietName}
           />
+
+          <WaterTracker dayLabel={selectedDay} />
 
           {dayMeals.length === 0 ? (
             <div className="glass rounded-2xl py-12 text-center">

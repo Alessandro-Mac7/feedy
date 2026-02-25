@@ -176,6 +176,7 @@ export function AddMealForm({ dietId, selectedDay, onAdded }: AddMealFormProps) 
                   </label>
                   <input
                     type="number"
+                    min="0"
                     value={carbs}
                     onChange={(e) => setCarbs(e.target.value)}
                     placeholder="—"
@@ -188,6 +189,7 @@ export function AddMealForm({ dietId, selectedDay, onAdded }: AddMealFormProps) 
                   </label>
                   <input
                     type="number"
+                    min="0"
                     value={fats}
                     onChange={(e) => setFats(e.target.value)}
                     placeholder="—"
@@ -200,6 +202,7 @@ export function AddMealForm({ dietId, selectedDay, onAdded }: AddMealFormProps) 
                   </label>
                   <input
                     type="number"
+                    min="0"
                     value={proteins}
                     onChange={(e) => setProteins(e.target.value)}
                     placeholder="—"

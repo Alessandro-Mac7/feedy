@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { MacroBadge } from "@/components/macro-badge";
@@ -27,6 +27,7 @@ export function EditableMealCard({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
+  const cardRef = useRef<HTMLDivElement>(null);
   const [foods, setFoods] = useState(meal.foods);
   const [carbs, setCarbs] = useState(meal.carbs?.toString() ?? "");
   const [fats, setFats] = useState(meal.fats?.toString() ?? "");
@@ -44,6 +45,9 @@ export function EditableMealCard({
     setProteins(meal.proteins?.toString() ?? "");
     setNotes(meal.notes ?? "");
     setEditing(true);
+    setTimeout(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 250);
   }
 
   function handleCancel() {
@@ -100,6 +104,7 @@ export function EditableMealCard({
   return (
     <>
       <div
+        ref={cardRef}
         className="rounded-2xl p-4 glass hover:shadow-lg transition-shadow"
         style={{ animationDelay: `${index * 60}ms` }}
       >
@@ -157,13 +162,13 @@ export function EditableMealCard({
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={handleStartEdit}
-                    className="rounded-xl bg-primary/12 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                    className="rounded-xl bg-primary/12 px-3.5 py-2.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors min-h-[44px]"
                   >
                     Modifica
                   </button>
                   <button
                     onClick={() => setShowDeleteDialog(true)}
-                    className="rounded-xl bg-danger/8 px-3.5 py-2 text-xs font-semibold text-danger hover:bg-danger/15 transition-colors"
+                    className="rounded-xl bg-danger/8 px-3.5 py-2.5 text-xs font-semibold text-danger hover:bg-danger/15 transition-colors min-h-[44px]"
                   >
                     Elimina
                   </button>
@@ -199,6 +204,7 @@ export function EditableMealCard({
                         </label>
                         <input
                           type="number"
+                          min="0"
                           value={carbs}
                           onChange={(e) => setCarbs(e.target.value)}
                           placeholder="—"
@@ -211,6 +217,7 @@ export function EditableMealCard({
                         </label>
                         <input
                           type="number"
+                          min="0"
                           value={fats}
                           onChange={(e) => setFats(e.target.value)}
                           placeholder="—"
@@ -223,6 +230,7 @@ export function EditableMealCard({
                         </label>
                         <input
                           type="number"
+                          min="0"
                           value={proteins}
                           onChange={(e) => setProteins(e.target.value)}
                           placeholder="—"

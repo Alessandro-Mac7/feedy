@@ -88,7 +88,7 @@ export default function ModificaDietaPage() {
       >
         <Link
           href="/diete"
-          className="flex h-9 w-9 items-center justify-center rounded-xl glass-subtle hover:bg-white/50 transition-colors"
+          className="flex h-11 w-11 items-center justify-center rounded-xl glass-subtle hover:bg-white/50 transition-colors"
         >
           <svg
             width="18"
