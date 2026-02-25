@@ -58,29 +58,26 @@
   --font-sans: var(--font-dm-sans);
 }
 
-/* Background on html — covers everything including iOS overscroll area.
-   The html background-color is what iOS shows during rubber-band bounce. */
+/* html background-color is what iOS shows during rubber-band overscroll */
 html {
   background-color: #E8F0EC;
+  overscroll-behavior: none;
 }
 
-/* Gradient mesh background on body */
+/* Gradient mesh background */
 body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   min-height: 100dvh;
+  overscroll-behavior: none;
   background:
     radial-gradient(ellipse 120% 80% at 10% 20%, rgba(45, 159, 143, 0.18) 0%, transparent 55%),
     radial-gradient(ellipse 100% 60% at 90% 80%, rgba(45, 159, 143, 0.12) 0%, transparent 50%),
     radial-gradient(ellipse 80% 70% at 50% 0%, rgba(59, 181, 164, 0.10) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 80% 30%, rgba(224, 114, 84, 0.05) 0%, transparent 50%),
     linear-gradient(175deg, #E8F0EC 0%, #DEE9E3 35%, #D6E4DB 65%, #E0EBE5 100%);
-  padding-top: env(safe-area-inset-top);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .scrollbar-hide {
