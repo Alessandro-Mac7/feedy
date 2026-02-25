@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform } from "motion/react";
 import Image from "next/image";
@@ -57,6 +57,263 @@ function FloatingCard({
     >
       {children}
     </motion.div>
+  );
+}
+
+const SCREENSHOTS = [
+  {
+    label: "Piano giornaliero",
+    content: (
+      <div className="space-y-2.5">
+        {/* Day tabs */}
+        <div className="flex justify-center gap-1">
+          {["L", "M", "M", "G", "V", "S", "D"].map((d, i) => (
+            <div key={i} className={`rounded-lg px-2 py-1 text-[9px] font-semibold ${i === 2 ? "bg-primary text-white" : "text-foreground-muted/40"}`}>{d}</div>
+          ))}
+        </div>
+        {/* Summary */}
+        <div className="glass-strong rounded-xl px-3 py-2">
+          <div className="flex items-center justify-between">
+            <p className="font-display text-sm text-foreground">Mercoledì</p>
+            <span className="text-[8px] font-semibold text-foreground-muted">3/5 pasti</span>
+          </div>
+        </div>
+        {/* Meals */}
+        {[
+          { emoji: "☕", name: "Colazione", food: "Yogurt greco, muesli" },
+          { emoji: "🥗", name: "Pranzo", food: "Insalata di quinoa" },
+          { emoji: "🍎", name: "Spuntino", food: "Mela e mandorle" },
+        ].map((m) => (
+          <div key={m.name} className="glass rounded-xl px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{m.emoji}</span>
+              <div>
+                <p className="text-[10px] font-semibold text-foreground">{m.name}</p>
+                <p className="text-[8px] text-foreground-muted">{m.food}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    label: "Macro & Acqua",
+    content: (
+      <div className="space-y-2.5">
+        {/* Donut */}
+        <div className="glass rounded-xl p-3 flex flex-col items-center">
+          <svg width="70" height="70" viewBox="0 0 70 70">
+            <circle cx="35" cy="35" r="26" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="7" />
+            <circle cx="35" cy="35" r="26" fill="none" stroke="#4A8AC4" strokeWidth="7" strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 26 * 0.46} ${2 * Math.PI * 26 * 0.54}`}
+              transform="rotate(-90 35 35)" />
+            <circle cx="35" cy="35" r="26" fill="none" stroke="#C9A033" strokeWidth="7" strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 26 * 0.26} ${2 * Math.PI * 26 * 0.74}`}
+              strokeDashoffset={`${-(2 * Math.PI * 26 * 0.48)}`}
+              transform="rotate(-90 35 35)" />
+            <circle cx="35" cy="35" r="26" fill="none" stroke="#B86B4F" strokeWidth="7" strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 26 * 0.22} ${2 * Math.PI * 26 * 0.78}`}
+              strokeDashoffset={`${-(2 * Math.PI * 26 * 0.76)}`}
+              transform="rotate(-90 35 35)" />
+            <text x="35" y="33" textAnchor="middle" className="text-[11px] font-bold fill-foreground">1.847</text>
+            <text x="35" y="42" textAnchor="middle" className="text-[7px] fill-foreground-muted">kcal</text>
+          </svg>
+          <div className="flex gap-3 mt-2">
+            {[
+              { label: "Carb", val: "48%", color: "#4A8AC4" },
+              { label: "Grassi", val: "28%", color: "#C9A033" },
+              { label: "Prot", val: "24%", color: "#B86B4F" },
+            ].map((m) => (
+              <div key={m.label} className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: m.color }} />
+                <span className="text-[8px] font-semibold text-foreground">{m.label}</span>
+                <span className="text-[8px] font-bold" style={{ color: m.color }}>{m.val}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Water */}
+        <div className="glass rounded-xl p-3 flex flex-col items-center gap-2">
+          <span className="text-[9px] font-semibold text-foreground-muted uppercase tracking-wider">💧 Drink Tracker</span>
+          <div className="flex items-center gap-3">
+            <svg width="24" height="40" viewBox="0 0 24 40">
+              <polygon points="2,2 22,2 19,38 5,38" fill="rgba(74,155,217,0.04)" stroke="rgba(74,155,217,0.25)" strokeWidth="1" strokeLinejoin="round" />
+              <polygon points="5,14 19,14 19,38 5,38" fill="rgba(74,155,217,0.3)" />
+            </svg>
+            <div className="text-center">
+              <p className="text-lg font-bold" style={{ color: "#4A9BD9" }}>6/8</p>
+              <p className="text-[8px] text-foreground-muted">bicchieri</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    label: "Stima AI",
+    content: (
+      <div className="space-y-2.5">
+        <div className="glass rounded-xl px-3 py-2">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm">🥗</span>
+            <div>
+              <p className="text-[10px] font-semibold text-foreground">Pranzo</p>
+              <p className="text-[8px] text-foreground-muted">Insalata di quinoa con avocado</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="rounded-full bg-violet-500/10 px-1.5 py-0.5 text-[7px] font-bold text-violet-600">🤖 AI</span>
+            <span className="text-[8px] text-foreground-muted">Macro stimati</span>
+          </div>
+          <div className="flex gap-1.5">
+            <span className="rounded-md bg-[#4A8AC4]/10 px-2 py-1 text-[9px] font-bold text-[#4A8AC4]">C 52g</span>
+            <span className="rounded-md bg-[#C9A033]/10 px-2 py-1 text-[9px] font-bold text-[#C9A033]">G 18g</span>
+            <span className="rounded-md bg-[#B86B4F]/10 px-2 py-1 text-[9px] font-bold text-[#B86B4F]">P 24g</span>
+          </div>
+        </div>
+        <div className="glass rounded-xl px-3 py-2">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm">🍝</span>
+            <div>
+              <p className="text-[10px] font-semibold text-foreground">Cena</p>
+              <p className="text-[8px] text-foreground-muted">Pasta integrale al pomodoro</p>
+            </div>
+          </div>
+          <button className="glass-subtle rounded-lg px-3 py-1.5 text-[8px] font-semibold text-primary w-full">
+            ✨ Stima Macro con AI
+          </button>
+        </div>
+        <div className="glass-subtle rounded-xl p-3 text-center">
+          <p className="text-[9px] text-foreground-muted leading-relaxed">
+            L&apos;AI analizza la descrizione del pasto e stima i valori nutrizionali in pochi secondi.
+          </p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    label: "Gestione diete",
+    content: (
+      <div className="space-y-2.5">
+        <p className="text-[10px] font-semibold text-foreground-muted uppercase tracking-wider px-1">Le tue diete</p>
+        {[
+          { name: "Dieta Mediterranea", period: "10 Feb – 10 Mar", active: true, meals: 35 },
+          { name: "Low Carb Autunno", period: "1 Set – 30 Set", active: false, meals: 28 },
+        ].map((d) => (
+          <div key={d.name} className={`rounded-xl p-3 ${d.active ? "glass-strong border-primary/20" : "glass"}`}>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] font-semibold text-foreground">{d.name}</p>
+              {d.active && (
+                <span className="rounded-full bg-primary/12 px-1.5 py-0.5 text-[7px] font-bold text-primary">ATTIVA</span>
+              )}
+            </div>
+            <p className="text-[8px] text-foreground-muted">{d.period}</p>
+            <div className="flex items-center gap-1 mt-1.5">
+              <span className="text-[8px] text-foreground-muted">🍽️ {d.meals} pasti</span>
+            </div>
+          </div>
+        ))}
+        <div className="glass-subtle rounded-xl p-3 flex items-center justify-center gap-1.5 border border-dashed border-primary/20">
+          <span className="text-primary text-sm">+</span>
+          <span className="text-[9px] font-semibold text-primary">Carica nuova dieta</span>
+        </div>
+      </div>
+    ),
+  },
+];
+
+function ScreenshotCarousel() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const scrollLeft = el.scrollLeft;
+      const cardWidth = el.offsetWidth * 0.72;
+      const index = Math.round(scrollLeft / cardWidth);
+      setActiveIndex(Math.min(index, SCREENSHOTS.length - 1));
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <section className="relative pb-24">
+      <div className="mx-auto max-w-lg px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.6 }}
+          className="mb-8 text-center"
+        >
+          <h2 className="font-display text-3xl text-foreground mb-3">
+            Scopri l&apos;app
+          </h2>
+          <p className="text-foreground-muted text-sm max-w-[300px] mx-auto leading-relaxed">
+            Scorri per esplorare le schermate principali di Feedy.
+          </p>
+        </motion.div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto scrollbar-hide px-[14%] snap-x snap-mandatory pb-2"
+        >
+          {SCREENSHOTS.map((screen, i) => (
+            <div
+              key={screen.label}
+              className="w-[72%] shrink-0 snap-center"
+            >
+              <div
+                className={`glass-strong rounded-[1.75rem] p-5 shadow-xl transition-all duration-300 ${
+                  activeIndex === i
+                    ? "shadow-primary/10 scale-100"
+                    : "shadow-primary/4 scale-[0.96] opacity-60"
+                }`}
+              >
+                {/* Mock phone header */}
+                <div className="mb-3 flex items-center justify-between text-[9px] text-foreground-muted/50">
+                  <span className="font-semibold">9:41</span>
+                  <div className="flex gap-1">
+                    <div className="h-1 w-2.5 rounded-sm bg-foreground-muted/25" />
+                    <div className="h-1 w-2.5 rounded-sm bg-foreground-muted/25" />
+                    <div className="h-1 w-2.5 rounded-sm bg-foreground-muted/25" />
+                  </div>
+                </div>
+                {screen.content}
+              </div>
+              <p className="mt-3 text-center text-xs font-semibold text-foreground-muted">
+                {screen.label}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Dots indicator */}
+        <div className="flex justify-center gap-2 mt-5">
+          {SCREENSHOTS.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                activeIndex === i
+                  ? "w-6 bg-primary"
+                  : "w-1.5 bg-primary/20"
+              }`}
+            />
+          ))}
+        </div>
+      </motion.div>
+    </section>
   );
 }
 
@@ -464,6 +721,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── SCREENSHOT CAROUSEL ── */}
+      <ScreenshotCarousel />
+
       {/* ── HOW IT WORKS ── */}
       <section className="relative px-6 pb-24">
         <div className="mx-auto max-w-lg">
@@ -491,7 +751,7 @@ export default function LandingPage() {
                 step: "02",
                 title: "Consulta ogni giorno",
                 desc: "Apri l'app e vedi subito cosa mangiare — il pasto corrente è in evidenza.",
-                accent: true,
+                accent: false,
               },
               {
                 step: "03",
