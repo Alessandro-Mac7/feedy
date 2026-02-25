@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { diets, meals } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
+import { estimateMacros } from "@/lib/groq/estimate";
 import type { ParsedMeal } from "@/types";
 
 export async function GET() {
@@ -67,6 +69,43 @@ export async function POST(req: NextRequest) {
       isAiEstimated: false,
     }))
   );
+
+  // Background: estimate macros for meals without them
+  after(async () => {
+    try {
+      const mealsWithoutMacros = await db
+        .select()
+        .from(meals)
+        .where(
+          and(
+            eq(meals.dietId, diet.id),
+            isNull(meals.carbs)
+          )
+        );
+
+      for (const meal of mealsWithoutMacros) {
+        try {
+          const estimate = await estimateMacros(meal.foods);
+          await db
+            .update(meals)
+            .set({
+              carbs: estimate.carbs,
+              fats: estimate.fats,
+              proteins: estimate.proteins,
+              isAiEstimated: true,
+            })
+            .where(eq(meals.id, meal.id));
+          console.log(`[AI Macro] Stimato: ${meal.mealType} ${meal.day}`);
+        } catch (err) {
+          console.error(`[AI Macro] Errore per ${meal.id}:`, err);
+        }
+      }
+
+      console.log(`[AI Macro] Completato: ${mealsWithoutMacros.length} pasti stimati per dieta ${diet.id}`);
+    } catch (err) {
+      console.error("[AI Macro] Errore nel background job:", err);
+    }
+  });
 
   return NextResponse.json(diet, { status: 201 });
 }
