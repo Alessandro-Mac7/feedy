@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { DietUpload } from "@/components/diet-upload";
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { cn } from "@/lib/utils";
 import type { Diet } from "@/types";
 import { useToast } from "@/components/toast";
@@ -11,6 +12,8 @@ import { useToast } from "@/components/toast";
 export default function DietePage() {
   const [diets, setDiets] = useState<Diet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<Diet | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
   const loadDiets = useCallback(async () => {
@@ -43,17 +46,21 @@ export default function DietePage() {
     loadDiets();
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Sei sicuro di voler eliminare questa dieta?")) return;
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/diets/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/diets/${deleteTarget.id}`, { method: "DELETE" });
       if (res.ok) {
         toast("Dieta eliminata", "success");
+        setDeleteTarget(null);
       } else {
         toast("Errore nell'eliminazione", "error");
       }
     } catch {
       toast("Errore di connessione", "error");
+    } finally {
+      setDeleting(false);
     }
     loadDiets();
   }
@@ -145,7 +152,7 @@ export default function DietePage() {
                       </button>
                     )}
                     <button
-                      onClick={() => handleDelete(diet.id)}
+                      onClick={() => setDeleteTarget(diet)}
                       className="rounded-xl bg-danger/8 px-3.5 py-2 text-xs font-semibold text-danger hover:bg-danger/15 transition-colors min-h-[36px]"
                     >
                       Elimina
@@ -157,6 +164,14 @@ export default function DietePage() {
           </div>
         </AnimatePresence>
       )}
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Eliminare questa dieta?"
+        description={deleteTarget ? `Stai per eliminare "${deleteTarget.dietName}" e tutti i pasti associati. Questa azione non può essere annullata.` : ""}
+        loading={deleting}
+      />
     </div>
   );
 }
