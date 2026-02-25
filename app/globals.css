@@ -64,9 +64,12 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  background-color: #D6E4DB;
+  background-color: #ffffff;
   background-image:
-    linear-gradient(180deg, #ffffff 0%, #ffffff 5%, #f5faf7 10%, #EBF3EE 18%, #E3EDE7 28%, #DCE7E0 40%, #D6E4DB 55%, #D6E4DB 100%);
+    radial-gradient(ellipse 100% 50% at 50% 60%, rgba(45, 159, 143, 0.14) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 50% 85%, rgba(45, 159, 143, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 50% 45%, rgba(224, 114, 84, 0.04) 0%, transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #f5faf7 15%, #EBF3EE 30%, #E3EDE7 50%, #DCE7E0 70%, #D6E4DB 100%);
 }
 
 .scrollbar-hide {
@@ -153,9 +156,11 @@ body {
 
 /* Auth page gradient — deeper green atmosphere */
 .auth-gradient {
-  background-color: #D6E4DB;
+  background-color: #ffffff;
   background-image:
-    linear-gradient(180deg, #ffffff 0%, #ffffff 5%, #f5faf7 10%, #EBF3EE 18%, #E3EDE7 28%, #DCE7E0 40%, #D6E4DB 55%, #D6E4DB 100%);
+    radial-gradient(ellipse 100% 50% at 50% 55%, rgba(45, 159, 143, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 40% at 50% 80%, rgba(45, 159, 143, 0.12) 0%, transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #f2f8f5 20%, #E3EDE7 45%, #D6E4DB 75%, #CDE4D8 100%);
 }
 
 /* Shimmer skeleton animation */
