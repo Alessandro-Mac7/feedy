@@ -84,20 +84,27 @@ export async function POST(req: NextRequest) {
         );
 
       for (const meal of mealsWithoutMacros) {
-        try {
-          const estimate = await estimateMacros(meal.foods);
-          await db
-            .update(meals)
-            .set({
-              carbs: estimate.carbs,
-              fats: estimate.fats,
-              proteins: estimate.proteins,
-              isAiEstimated: true,
-            })
-            .where(eq(meals.id, meal.id));
-          console.log(`[AI Macro] Stimato: ${meal.mealType} ${meal.day}`);
-        } catch (err) {
-          console.error(`[AI Macro] Errore per ${meal.id}:`, err);
+        const MAX_ATTEMPTS = 2;
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+          try {
+            const estimate = await estimateMacros(meal.foods);
+            await db
+              .update(meals)
+              .set({
+                carbs: estimate.carbs,
+                fats: estimate.fats,
+                proteins: estimate.proteins,
+                isAiEstimated: true,
+              })
+              .where(eq(meals.id, meal.id));
+            console.log(`[AI Macro] Stimato: ${meal.mealType} ${meal.day}`);
+            break;
+          } catch (err) {
+            console.error(`[AI Macro] Tentativo ${attempt}/${MAX_ATTEMPTS} fallito per ${meal.id}:`, err);
+            if (attempt < MAX_ATTEMPTS) {
+              await new Promise((r) => setTimeout(r, 1000));
+            }
+          }
         }
       }
 

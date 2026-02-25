@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
-import { meals } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { diets, meals } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { estimateMacros } from "@/lib/groq/estimate";
 
 export async function POST(req: NextRequest) {
@@ -21,18 +21,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Fetch the meal
-  const [meal] = await db
-    .select()
+  // Fetch the meal and verify ownership via diet
+  const [row] = await db
+    .select({ meal: meals })
     .from(meals)
-    .where(eq(meals.id, mealId));
+    .innerJoin(diets, eq(meals.dietId, diets.id))
+    .where(and(eq(meals.id, mealId), eq(diets.userId, session.data.user.id)));
 
-  if (!meal) {
+  if (!row) {
     return NextResponse.json(
       { error: "Pasto non trovato" },
       { status: 404 }
     );
   }
+
+  const meal = row.meal;
 
   try {
     const estimate = await estimateMacros(meal.foods);

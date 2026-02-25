@@ -47,15 +47,15 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-5 left-0 right-0 z-50 flex justify-center px-6 safe-area-bottom">
+    <div className="pointer-events-none fixed bottom-5 left-0 right-0 z-50 flex justify-center px-6 safe-area-bottom">
       <motion.nav
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, type: "spring", bounce: 0.15, duration: 0.6 }}
-        className="glass-strong flex items-center gap-0.5 rounded-[22px] px-2 py-2"
+        className="pointer-events-auto glass-strong flex items-center gap-0.5 rounded-[22px] px-2 py-2"
       >
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
             <Link
               key={item.href}

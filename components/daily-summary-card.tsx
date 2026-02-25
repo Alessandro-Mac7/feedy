@@ -3,6 +3,11 @@
 import { motion } from "motion/react";
 import type { Meal } from "@/types";
 
+const KCAL_PER_G_CARBS = 4;
+const KCAL_PER_G_FATS = 9;
+const KCAL_PER_G_PROTEINS = 4;
+const TARGET_KCAL_DEFAULT = 2000;
+
 interface DailySummaryCardProps {
   meals: Meal[];
   dayLabel?: string;
@@ -55,13 +60,13 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     { carbs: 0, fats: 0, proteins: 0 }
   );
 
-  const kcal = totals.carbs * 4 + totals.fats * 9 + totals.proteins * 4;
+  const kcal = totals.carbs * KCAL_PER_G_CARBS + totals.fats * KCAL_PER_G_FATS + totals.proteins * KCAL_PER_G_PROTEINS;
   const hasAny = totals.carbs > 0 || totals.fats > 0 || totals.proteins > 0;
 
   // SVG circular progress
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
-  const targetKcal = 2500;
+  const targetKcal = TARGET_KCAL_DEFAULT;
   const progress = Math.min(kcal / targetKcal, 1);
 
   // Find max macro for proportional bars
