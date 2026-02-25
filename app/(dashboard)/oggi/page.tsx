@@ -10,6 +10,8 @@ import { getTodayDay, getCurrentMealType } from "@/lib/utils";
 import { MEAL_TYPES, type Day, type Meal, type Diet, type MealType } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
+import { useToast } from "@/components/toast";
+import { OverlayLoader } from "@/components/page-loader";
 
 interface DietWithMeals extends Diet {
   meals: Meal[];
@@ -20,6 +22,7 @@ export default function OggiPage() {
   const [diet, setDiet] = useState<DietWithMeals | null>(null);
   const [loading, setLoading] = useState(true);
   const [estimating, setEstimating] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const loadActiveDiet = useCallback(async () => {
     try {
@@ -55,8 +58,13 @@ export default function OggiPage() {
         body: JSON.stringify({ mealId }),
       });
       if (res.ok) {
+        toast("Macro stimati con AI", "success");
         loadActiveDiet();
+      } else {
+        toast("Errore nella stima dei macro", "error");
       }
+    } catch {
+      toast("Errore di connessione", "error");
     } finally {
       setEstimating(null);
     }
@@ -129,17 +137,20 @@ export default function OggiPage() {
 
   return (
     <div className="space-y-5">
+      <AnimatePresence>
+        {estimating && <OverlayLoader message="Stima macro con AI..." />}
+      </AnimatePresence>
       {/* Header with logo */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-center -mb-3"
+        className="flex items-center justify-center -mt-2 -mb-4"
       >
         <Image
           src="/logo.png"
           alt="Feedy"
-          width={140}
-          height={140}
+          width={130}
+          height={47}
         />
         {isDietCompleted && (
           <span className="absolute right-5 flex items-center gap-1.5 rounded-xl glass-subtle px-3 py-1.5 text-xs font-semibold text-success">

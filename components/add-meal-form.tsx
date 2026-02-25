@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { MEAL_TYPES, MEAL_EMOJI, type Day, type MealType } from "@/types";
+import { useToast } from "@/components/toast";
 
 interface AddMealFormProps {
   dietId: string;
@@ -21,6 +22,7 @@ export function AddMealForm({ dietId, selectedDay, onAdded }: AddMealFormProps) 
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   function reset() {
     setMealType("Colazione");
@@ -63,9 +65,12 @@ export function AddMealForm({ dietId, selectedDay, onAdded }: AddMealFormProps) 
 
       reset();
       setIsOpen(false);
+      toast("Pasto aggiunto!", "success");
       onAdded();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Errore sconosciuto.");
+      const msg = err instanceof Error ? err.message : "Errore sconosciuto.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setSubmitting(false);
     }

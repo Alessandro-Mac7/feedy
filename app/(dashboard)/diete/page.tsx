@@ -6,10 +6,12 @@ import Link from "next/link";
 import { DietUpload } from "@/components/diet-upload";
 import { cn } from "@/lib/utils";
 import type { Diet } from "@/types";
+import { useToast } from "@/components/toast";
 
 export default function DietePage() {
   const [diets, setDiets] = useState<Diet[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   const loadDiets = useCallback(async () => {
     try {
@@ -28,13 +30,31 @@ export default function DietePage() {
   }, [loadDiets]);
 
   async function handleActivate(id: string) {
-    await fetch(`/api/diets/${id}/activate`, { method: "POST" });
+    try {
+      const res = await fetch(`/api/diets/${id}/activate`, { method: "POST" });
+      if (res.ok) {
+        toast("Dieta attivata", "success");
+      } else {
+        toast("Errore nell'attivazione", "error");
+      }
+    } catch {
+      toast("Errore di connessione", "error");
+    }
     loadDiets();
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Sei sicuro di voler eliminare questa dieta?")) return;
-    await fetch(`/api/diets/${id}`, { method: "DELETE" });
+    try {
+      const res = await fetch(`/api/diets/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast("Dieta eliminata", "success");
+      } else {
+        toast("Errore nell'eliminazione", "error");
+      }
+    } catch {
+      toast("Errore di connessione", "error");
+    }
     loadDiets();
   }
 

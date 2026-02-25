@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { MacroBadge } from "@/components/macro-badge";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { MEAL_EMOJI, type Meal, type MealType } from "@/types";
+import { useToast } from "@/components/toast";
 
 interface EditableMealCardProps {
   meal: Meal;
@@ -24,6 +25,7 @@ export function EditableMealCard({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { toast } = useToast();
 
   const [foods, setFoods] = useState(meal.foods);
   const [carbs, setCarbs] = useState(meal.carbs?.toString() ?? "");
@@ -65,8 +67,13 @@ export function EditableMealCard({
       });
       if (res.ok) {
         setEditing(false);
+        toast("Pasto aggiornato", "success");
         onUpdated();
+      } else {
+        toast("Errore nel salvataggio", "error");
       }
+    } catch {
+      toast("Errore di connessione", "error");
     } finally {
       setSaving(false);
     }
@@ -78,8 +85,13 @@ export function EditableMealCard({
       const res = await fetch(`/api/meals/${meal.id}`, { method: "DELETE" });
       if (res.ok) {
         setShowDeleteDialog(false);
+        toast("Pasto eliminato", "success");
         onDeleted();
+      } else {
+        toast("Errore nell'eliminazione", "error");
       }
+    } catch {
+      toast("Errore di connessione", "error");
     } finally {
       setDeleting(false);
     }
