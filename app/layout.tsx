@@ -20,7 +20,6 @@ export const metadata: Metadata = {
   title: "Feedy — Piano Pasti Settimanale",
   description: "Tracker del piano pasti settimanale",
   icons: {
-    icon: "/icon.png",
     apple: "/icons/apple-touch-icon.png",
   },
   appleWebApp: {
