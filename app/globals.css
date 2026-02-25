@@ -153,12 +153,9 @@ body {
 
 /* Auth page gradient — deeper green atmosphere */
 .auth-gradient {
-  background:
-    radial-gradient(ellipse 130% 90% at 20% 50%, rgba(45, 159, 143, 0.25) 0%, transparent 55%),
-    radial-gradient(ellipse 100% 70% at 80% 20%, rgba(59, 181, 164, 0.18) 0%, transparent 50%),
-    radial-gradient(ellipse 80% 80% at 50% 90%, rgba(45, 159, 143, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 70% 60%, rgba(224, 114, 84, 0.06) 0%, transparent 50%),
-    linear-gradient(170deg, #D6E8DF 0%, #CDE4D8 30%, #C4DED1 60%, #D0E5DA 100%);
+  background-color: #D6E4DB;
+  background-image:
+    linear-gradient(180deg, #ffffff 0%, #ffffff 5%, #f5faf7 10%, #EBF3EE 18%, #E3EDE7 28%, #DCE7E0 40%, #D6E4DB 55%, #D6E4DB 100%);
 }
 
 /* Shimmer skeleton animation */
