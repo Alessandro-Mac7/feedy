@@ -1,23 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "motion/react";
 import { authClient } from "@/lib/auth/client";
-import { useRouter } from "next/navigation";
+import { useToast } from "@/components/toast";
 
 export default function ImpostazioniPage() {
   const session = authClient.useSession();
-  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
+  const { toast } = useToast();
 
   async function handleSignOut() {
-    await authClient.signOut();
-    router.push("/auth/sign-in");
+    setSigningOut(true);
+    try {
+      await authClient.signOut();
+      window.location.href = "/auth/sign-in";
+    } catch {
+      toast("Errore durante il logout. Riprova.", "error");
+      setSigningOut(false);
+    }
   }
 
   async function handleClearCache() {
     if ("caches" in window) {
       const keys = await caches.keys();
       await Promise.all(keys.map((key) => caches.delete(key)));
-      alert("Cache svuotata con successo.");
+      toast("Cache svuotata con successo.", "success");
     }
   }
 
@@ -105,15 +113,24 @@ export default function ImpostazioniPage() {
         </button>
 
         <button
+          type="button"
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-2xl border border-danger/20 glass px-5 py-3.5 text-sm font-semibold text-danger hover:bg-danger/5 transition-colors min-h-[48px]"
+          disabled={signingOut}
+          className="flex w-full items-center gap-3 rounded-2xl border border-danger/20 glass px-5 py-3.5 text-sm font-semibold text-danger hover:bg-danger/5 transition-colors min-h-[48px] disabled:opacity-60"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-          Esci
+          {signingOut ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" className="animate-spin">
+              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+              <path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          )}
+          {signingOut ? "Uscita in corso..." : "Esci"}
         </button>
       </motion.div>
 
