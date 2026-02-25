@@ -82,14 +82,16 @@ export default function AuthPage() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 mb-8 text-center"
       >
-        <Image
-          src="/logo.png"
-          alt="Feedy"
-          width={180}
-          height={65}
-          className="mx-auto"
-          priority
-        />
+        <Link href="/">
+          <Image
+            src="/logo.png"
+            alt="Feedy"
+            width={180}
+            height={65}
+            className="mx-auto"
+            priority
+          />
+        </Link>
         <p className="text-sm text-foreground-muted">
           Il tuo piano pasti settimanale
         </p>
