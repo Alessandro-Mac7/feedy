@@ -68,21 +68,25 @@ REGOLE FONDAMENTALI:
 4. CATEGORIZZA in modo logico per i reparti del supermercato
 5. NON ripetere mai lo stesso ingrediente
 
-REGOLA CHIAVE — INGREDIENTI GENERICI:
-Quando trovi termini GENERICI o VAGHI, SOSTITUISCILI con proposte SPECIFICHE e DI STAGIONE (${month}, ${season}):
+REGOLA CHIAVE — MAI SCRIVERE INGREDIENTI GENERICI:
+NON scrivere MAI parole generiche come "verdura", "frutta", "carne", "pesce", "insalata", "formaggio" ecc.
+ELIMINA il termine generico e SOSTITUISCILO con PRODOTTI CONCRETI che puoi comprare al supermercato.
+Siamo a ${month} (${season}), quindi proponi prodotti di stagione.
 
-- "verdura" o "verdure" → proponi 2-3 verdure di stagione specifiche (es. in inverno: broccoli, finocchi, carciofi; in estate: zucchine, melanzane, pomodori)
-- "frutta" o "frutta di stagione" → proponi 2-3 frutti di stagione specifici (es. in inverno: arance, mandarini, kiwi; in estate: pesche, albicocche, anguria)
-- "carni bianche" → proponi il taglio specifico (es. "Petto di pollo" o "Fesa di tacchino")
-- "carni rosse" → proponi il taglio specifico (es. "Controfiletto di manzo" o "Fettine di vitello")
-- "pesce" → proponi specie specifiche di stagione (es. "Orata" o "Merluzzo")
-- "insalata" → proponi il tipo (es. "Lattuga romana" o "Misticanza")
-- "formaggio" → proponi un tipo (es. "Parmigiano Reggiano" o "Ricotta fresca")
-- "affettati" → proponi il tipo (es. "Bresaola" o "Prosciutto crudo")
-- "cereali" → proponi il tipo (es. "Fiocchi d'avena" o "Muesli integrale")
-- "legumi" → proponi il tipo di stagione (es. "Lenticchie" o "Ceci")
+ESEMPI DI SOSTITUZIONE OBBLIGATORIA:
+- La dieta dice "verdura" o "verdure" → tu scrivi IN LISTA 2-3 verdure separate, ognuna come elemento a sé: "Broccoli (di stagione)", "Finocchi (di stagione)", "Carciofi (di stagione)"
+- La dieta dice "frutta" o "frutta di stagione" → tu scrivi 2-3 frutti separati: "Arance (di stagione)", "Kiwi (di stagione)", "Mandarini (di stagione)"
+- La dieta dice "carni bianche" → tu scrivi: "Petto di pollo" o "Fesa di tacchino"
+- La dieta dice "carni rosse" → tu scrivi: "Controfiletto di manzo" o "Fettine di vitello"
+- La dieta dice "pesce" → tu scrivi: "Orata" o "Merluzzo"
+- La dieta dice "insalata" → tu scrivi: "Lattuga romana" o "Misticanza"
+- La dieta dice "formaggio" → tu scrivi: "Parmigiano Reggiano" o "Ricotta fresca"
+- La dieta dice "affettati" → tu scrivi: "Bresaola" o "Prosciutto crudo"
+- La dieta dice "cereali" → tu scrivi: "Fiocchi d'avena" o "Muesli integrale"
+- La dieta dice "legumi" → tu scrivi: "Lenticchie" o "Ceci"
 
-Aggiungi tra parentesi "(di stagione)" accanto a frutta e verdura stagionali.
+Ogni sostituzione diventa un ELEMENTO SEPARATO nella lista, con la sua quantità stimata.
+Per frutta e verdura di stagione aggiungi "(di stagione)" nel nome.
 
 Rispondi SOLO con un JSON con questa struttura:
 {
