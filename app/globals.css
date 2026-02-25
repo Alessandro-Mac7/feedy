@@ -59,7 +59,13 @@
 }
 
 html {
-  background: var(--background);
+  background: #E8F0EC;
+  min-height: calc(100% + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+html, body {
+  overscroll-behavior: none;
 }
 
 /* Gradient mesh background — fixed via ::before to work on iOS Safari
@@ -75,7 +81,10 @@ body {
 body::before {
   content: "";
   position: fixed;
-  inset: 0;
+  top: -50vh;
+  left: 0;
+  right: 0;
+  bottom: -50vh;
   z-index: -1;
   background:
     radial-gradient(ellipse 120% 80% at 10% 20%, rgba(45, 159, 143, 0.18) 0%, transparent 55%),

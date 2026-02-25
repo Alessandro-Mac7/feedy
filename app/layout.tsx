@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Feedy",
   },
 };
@@ -34,6 +34,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -42,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="it" className="light" style={{ colorScheme: "light" }} suppressHydrationWarning>
+    <html lang="it" className="light" suppressHydrationWarning>
       <body className={`${dmSans.variable} ${dmSerif.variable} antialiased`}>
         <AuthProvider>
           {children}
