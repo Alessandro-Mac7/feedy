@@ -206,7 +206,7 @@ export default function OggiPage() {
   return (
     <div className="space-y-5">
       <Confetti trigger={showConfetti} />
-      <ShoppingList meals={diet.meals} open={showShoppingList} onClose={() => setShowShoppingList(false)} />
+      <ShoppingList open={showShoppingList} onClose={() => setShowShoppingList(false)} />
       <AiConsentDialog
         open={pendingMealId !== null}
         onAccept={handleAiConsentAccept}
