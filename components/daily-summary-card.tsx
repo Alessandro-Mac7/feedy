@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import type { Meal } from "@/types";
 
 const KCAL_PER_G_CARBS = 4;
@@ -20,6 +21,9 @@ interface DailySummaryCardProps {
 }
 
 export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCardProps) {
+  // null = show kcal, 0/1/2 = show macro index
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
   const totals = meals.reduce(
     (acc, meal) => ({
       carbs: acc.carbs + (meal.carbs ?? 0),
@@ -48,14 +52,16 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
   const circumference = 2 * Math.PI * radius;
   const gap = 3;
 
-  // Build donut segments with angle info for labels
+  // Build donut segments
   const segments: {
     key: string;
+    label: string;
     color: string;
     length: number;
     offset: number;
     pct: number;
-    midAngle: number;
+    grams: number;
+    macroIndex: number;
   }[] = [];
 
   if (hasAny) {
@@ -64,26 +70,45 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
     const gapTotal = activeSegments.length * gap;
     const availableLength = circumference - gapTotal;
 
-    for (const macro of MACROS) {
+    for (let mi = 0; mi < MACROS.length; mi++) {
+      const macro = MACROS[mi];
       const pct = percentages[macro.key];
       if (pct <= 0) continue;
       const segmentLength = (pct / 100) * availableLength;
-      // Calculate midpoint angle (starting from top, -90deg)
-      const startAngle = (currentOffset / circumference) * 360 - 90;
-      const segmentAngle = (segmentLength / circumference) * 360;
-      const midAngle = startAngle + segmentAngle / 2;
 
       segments.push({
         key: macro.key,
+        label: macro.label,
         color: macro.color,
         length: segmentLength,
         offset: currentOffset,
         pct,
-        midAngle,
+        grams: totals[macro.key],
+        macroIndex: mi,
       });
       currentOffset += segmentLength + gap;
     }
   }
+
+  function handleDonutTap() {
+    if (activeIndex === null) {
+      setActiveIndex(0);
+    } else if (activeIndex >= MACROS.length - 1) {
+      setActiveIndex(null);
+    } else {
+      setActiveIndex(activeIndex + 1);
+    }
+  }
+
+  // What to show in center
+  const activeMacro = activeIndex !== null ? MACROS[activeIndex] : null;
+  const centerColor = activeMacro ? activeMacro.color : "var(--foreground)";
+  const centerValue = activeMacro
+    ? `${percentages[activeMacro.key]}%`
+    : String(kcal);
+  const centerSub = activeMacro
+    ? `${activeMacro.label} · ${totals[activeMacro.key]}g`
+    : "kcal";
 
   const completedMeals = meals.filter(
     (m) => m.carbs !== null || m.fats !== null || m.proteins !== null
@@ -110,8 +135,11 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
 
       {hasAny ? (
         <div className="flex items-center gap-5">
-          {/* Donut chart with percentage labels */}
-          <div className="relative shrink-0">
+          {/* Donut chart — tap to cycle */}
+          <div
+            className="relative shrink-0 cursor-pointer"
+            onClick={handleDonutTap}
+          >
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
               {/* Background track */}
               <circle
@@ -123,84 +151,103 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                 strokeWidth="12"
               />
               {/* Macro segments */}
-              {segments.map((seg, i) => (
-                <motion.circle
-                  key={seg.key}
-                  cx={center}
-                  cy={center}
-                  r={radius}
-                  fill="none"
-                  stroke={seg.color}
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeDasharray={`${seg.length} ${circumference - seg.length}`}
-                  initial={{ strokeDashoffset: circumference }}
-                  animate={{ strokeDashoffset: -seg.offset }}
-                  transition={{
-                    delay: 0.2 + i * 0.15,
-                    duration: 1,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  transform={`rotate(-90 ${center} ${center})`}
-                />
-              ))}
-              {/* Percentage labels on segments */}
               {segments.map((seg, i) => {
-                const angleRad = (seg.midAngle * Math.PI) / 180;
-                const labelX = center + radius * Math.cos(angleRad);
-                const labelY = center + radius * Math.sin(angleRad);
+                const isHighlighted = activeIndex === null || activeIndex === seg.macroIndex;
                 return (
-                  <motion.text
-                    key={`label-${seg.key}`}
-                    x={labelX}
-                    y={labelY}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fill="white"
-                    fontSize="10"
-                    fontWeight="700"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 + i * 0.1, duration: 0.4 }}
-                    style={{ textShadow: "0 1px 3px rgba(0,0,0,0.4)" }}
-                  >
-                    {seg.pct}%
-                  </motion.text>
+                  <motion.circle
+                    key={seg.key}
+                    cx={center}
+                    cy={center}
+                    r={radius}
+                    fill="none"
+                    stroke={seg.color}
+                    strokeLinecap="round"
+                    strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                    initial={{ strokeDashoffset: circumference, strokeWidth: 12 }}
+                    animate={{
+                      strokeDashoffset: -seg.offset,
+                      strokeWidth: activeIndex === seg.macroIndex ? 16 : 12,
+                      opacity: isHighlighted ? 1 : 0.3,
+                    }}
+                    transition={{
+                      strokeDashoffset: {
+                        delay: 0.2 + i * 0.15,
+                        duration: 1,
+                        ease: [0.22, 1, 0.36, 1],
+                      },
+                      strokeWidth: { duration: 0.3, ease: "easeOut" },
+                      opacity: { duration: 0.3 },
+                    }}
+                    transform={`rotate(-90 ${center} ${center})`}
+                  />
                 );
               })}
             </svg>
-            {/* Center text */}
+            {/* Center text — animates on change */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4, duration: 0.4 }}
-                className="text-2xl font-bold text-foreground tabular-nums leading-none"
-              >
-                {kcal}
-              </motion.span>
-              <span className="text-[10px] font-medium text-foreground-muted uppercase tracking-wider mt-0.5">
-                kcal
-              </span>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeIndex ?? "kcal"}
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center"
+                >
+                  <span
+                    className="text-2xl font-bold tabular-nums leading-none"
+                    style={{ color: centerColor }}
+                  >
+                    {centerValue}
+                  </span>
+                  <span
+                    className="text-[10px] font-medium uppercase tracking-wider mt-0.5"
+                    style={{ color: activeMacro ? activeMacro.color : "var(--foreground-muted)" }}
+                  >
+                    {centerSub}
+                  </span>
+                </motion.div>
+              </AnimatePresence>
             </div>
+            {/* Tap hint */}
+            {activeIndex === null && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2"
+              >
+                <span className="text-[9px] text-foreground-muted/50">tap</span>
+              </motion.div>
+            )}
           </div>
 
           {/* Macro legend with grams */}
           <div className="flex-1 space-y-3">
             {MACROS.map((macro, i) => {
               const grams = totals[macro.key];
-              if (percentages[macro.key] <= 0) return null;
+              const pct = percentages[macro.key];
+              if (pct <= 0) return null;
+              const isActive = activeIndex === i;
               return (
                 <motion.div
                   key={macro.key}
                   initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
-                  className="flex items-center gap-2.5"
+                  animate={{
+                    opacity: activeIndex === null || isActive ? 1 : 0.4,
+                    x: 0,
+                    scale: isActive ? 1.02 : 1,
+                  }}
+                  transition={{ delay: 0.3 + i * 0.1, duration: 0.3 }}
+                  className="flex items-center gap-2.5 cursor-pointer"
+                  onClick={() => setActiveIndex(isActive ? null : i)}
                 >
                   <div
-                    className="h-3 w-3 rounded-full shrink-0"
-                    style={{ backgroundColor: macro.color }}
+                    className="h-3 w-3 rounded-full shrink-0 transition-transform"
+                    style={{
+                      backgroundColor: macro.color,
+                      transform: isActive ? "scale(1.3)" : "scale(1)",
+                    }}
                   />
                   <div className="flex-1 min-w-0">
                     <span className="text-xs font-semibold text-foreground">
@@ -209,6 +256,16 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                     <span className="text-[10px] text-foreground-muted tabular-nums ml-1.5">
                       {grams}g
                     </span>
+                    {isActive && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        className="text-[10px] font-bold tabular-nums ml-1"
+                        style={{ color: macro.color }}
+                      >
+                        · {pct}%
+                      </motion.span>
+                    )}
                   </div>
                 </motion.div>
               );
