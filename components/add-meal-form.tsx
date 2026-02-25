@@ -51,16 +51,20 @@ export function AddMealForm({ dietId, selectedDay, onAdded }: AddMealFormProps) 
           day: selectedDay,
           mealType,
           foods: foods.trim(),
-          carbs: carbs ? parseInt(carbs) : null,
-          fats: fats ? parseInt(fats) : null,
-          proteins: proteins ? parseInt(proteins) : null,
+          carbs: carbs ? Math.round(parseFloat(carbs)) : null,
+          fats: fats ? Math.round(parseFloat(fats)) : null,
+          proteins: proteins ? Math.round(parseFloat(proteins)) : null,
           notes: notes.trim() || null,
         }),
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Errore durante l'aggiunta.");
+        let errorMsg = "Errore sconosciuto";
+        try {
+          const data = await res.json();
+          errorMsg = data.error || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
       }
 
       reset();

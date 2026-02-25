@@ -59,9 +59,9 @@ export function EditableMealCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           foods: foods.trim(),
-          carbs: carbs ? parseInt(carbs) : null,
-          fats: fats ? parseInt(fats) : null,
-          proteins: proteins ? parseInt(proteins) : null,
+          carbs: carbs ? Math.round(parseFloat(carbs)) : null,
+          fats: fats ? Math.round(parseFloat(fats)) : null,
+          proteins: proteins ? Math.round(parseFloat(proteins)) : null,
           notes: notes.trim() || null,
         }),
       });

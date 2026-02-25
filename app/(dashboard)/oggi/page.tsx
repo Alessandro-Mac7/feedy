@@ -144,13 +144,13 @@ export default function OggiPage() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-center -mt-2 -mb-4"
+        className="flex items-center justify-center"
       >
         <Image
           src="/logo.png"
           alt="Feedy"
-          width={130}
-          height={47}
+          width={140}
+          height={35}
         />
         {isDietCompleted && (
           <span className="absolute right-5 flex items-center gap-1.5 rounded-xl glass-subtle px-3 py-1.5 text-xs font-semibold text-success">

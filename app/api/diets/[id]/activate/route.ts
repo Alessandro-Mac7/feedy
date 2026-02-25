@@ -25,14 +25,12 @@ export async function POST(
     return NextResponse.json({ error: "Dieta non trovata" }, { status: 404 });
   }
 
-  // Deactivate all user's diets
-  await db
-    .update(diets)
-    .set({ isActive: false })
-    .where(eq(diets.userId, session.data.user.id));
-
-  // Activate the target diet
-  await db.update(diets).set({ isActive: true }).where(eq(diets.id, id));
+  // Deactivate all user's diets and activate the target in a transaction
+  const userId = session.data.user.id;
+  await db.transaction(async (tx) => {
+    await tx.update(diets).set({ isActive: false }).where(eq(diets.userId, userId));
+    await tx.update(diets).set({ isActive: true }).where(eq(diets.id, id));
+  });
 
   return NextResponse.json({ ok: true });
 }

@@ -36,7 +36,12 @@ Stima valori ragionevoli per una porzione standard. Arrotonda all'intero.`,
     throw new Error("Risposta vuota da Groq");
   }
 
-  const parsed = JSON.parse(content) as MacroEstimate;
+  let parsed: MacroEstimate;
+  try {
+    parsed = JSON.parse(content) as MacroEstimate;
+  } catch {
+    throw new Error("Risposta JSON non valida da Groq");
+  }
 
   if (
     typeof parsed.carbs !== "number" ||
@@ -46,10 +51,12 @@ Stima valori ragionevoli per una porzione standard. Arrotonda all'intero.`,
     throw new Error("Formato risposta non valido");
   }
 
+  const clamp = (v: number) => Math.min(2000, Math.max(0, Math.round(v)));
+
   const result: MacroEstimate = {
-    carbs: Math.round(parsed.carbs),
-    fats: Math.round(parsed.fats),
-    proteins: Math.round(parsed.proteins),
+    carbs: clamp(parsed.carbs),
+    fats: clamp(parsed.fats),
+    proteins: clamp(parsed.proteins),
   };
 
   cache.set(cacheKey, result);

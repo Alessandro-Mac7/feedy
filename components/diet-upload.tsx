@@ -62,8 +62,12 @@ export function DietUpload({ onUploaded }: DietUploadProps) {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Errore durante il caricamento.");
+        let errorMsg = "Errore sconosciuto";
+        try {
+          const data = await res.json();
+          errorMsg = data.error || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
       }
 
       setDietName("");
@@ -201,7 +205,7 @@ export function DietUpload({ onUploaded }: DietUploadProps) {
                       <li key={i}>{w}</li>
                     ))}
                   </ul>
-                  {mealsWithoutMacros! > 0 && (
+                  {(mealsWithoutMacros ?? 0) > 0 && (
                     <p className="mt-2 text-xs text-amber-700 font-semibold">
                       {mealsWithoutMacros} pasti senza macro — potrai stimarli con l&apos;AI dopo il caricamento.
                     </p>
