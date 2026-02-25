@@ -185,8 +185,8 @@ export function MacroDonutCard({ meals }: MacroDonutCardProps) {
         </div>
       </div>
 
-      {/* Macro legend — aligned grid */}
-      <div className="w-full space-y-1.5">
+      {/* Macro legend — centered */}
+      <div className="flex flex-col items-center gap-1.5">
         {MACROS.map((macro, i) => {
           const grams = totals[macro.key];
           const pct = percentages[macro.key];
@@ -195,48 +195,31 @@ export function MacroDonutCard({ meals }: MacroDonutCardProps) {
           return (
             <motion.div
               key={macro.key}
-              initial={{ opacity: 0, x: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{
                 opacity: activeIndex === null || isActive ? 1 : 0.4,
-                x: 0,
+                y: 0,
               }}
               transition={{ delay: 0.3 + i * 0.1, duration: 0.3 }}
-              className="cursor-pointer"
+              className="cursor-pointer flex items-center gap-2"
               onClick={() => setActiveIndex(isActive ? null : i)}
             >
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <div
-                  className="h-2 w-2 rounded-full shrink-0"
-                  style={{ backgroundColor: macro.color }}
-                />
-                <span className="text-[11px] font-semibold text-foreground w-[42px]">
-                  {macro.label}
-                </span>
-                <span className="text-[10px] text-foreground-muted tabular-nums text-right w-[32px]">
-                  {grams}g
-                </span>
-                <span
-                  className="text-[10px] font-bold tabular-nums text-right w-[28px]"
-                  style={{ color: macro.color }}
-                >
-                  {pct}%
-                </span>
-              </div>
-              <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ backgroundColor: macro.color }}
-                  initial={{ width: 0 }}
-                  animate={{
-                    width: `${pct}%`,
-                    opacity: isActive ? 1 : 0.6,
-                  }}
-                  transition={{
-                    width: { delay: 0.4 + i * 0.12, duration: 0.8, ease: [0.22, 1, 0.36, 1] },
-                    opacity: { duration: 0.3 },
-                  }}
-                />
-              </div>
+              <div
+                className="h-2 w-2 rounded-full shrink-0"
+                style={{ backgroundColor: macro.color }}
+              />
+              <span className="text-[11px] font-semibold text-foreground w-[46px]">
+                {macro.label}
+              </span>
+              <span className="text-[10px] text-foreground-muted tabular-nums w-[30px] text-right">
+                {grams}g
+              </span>
+              <span
+                className="text-[10px] font-bold tabular-nums w-[26px] text-right"
+                style={{ color: macro.color }}
+              >
+                {pct}%
+              </span>
             </motion.div>
           );
         })}
