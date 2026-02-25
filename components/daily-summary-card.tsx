@@ -42,14 +42,22 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
   const percentages = { carbs: pctCarbs, fats: pctFats, proteins: pctProteins };
 
   // Donut geometry
-  const size = 120;
+  const size = 148;
   const center = size / 2;
-  const radius = 46;
+  const radius = 56;
   const circumference = 2 * Math.PI * radius;
-  const gap = 3; // gap in px between segments
+  const gap = 3;
 
-  // Build donut segments
-  const segments: { color: string; length: number; offset: number }[] = [];
+  // Build donut segments with angle info for labels
+  const segments: {
+    key: string;
+    color: string;
+    length: number;
+    offset: number;
+    pct: number;
+    midAngle: number;
+  }[] = [];
+
   if (hasAny) {
     let currentOffset = 0;
     const activeSegments = MACROS.filter((m) => percentages[m.key] > 0);
@@ -60,10 +68,18 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
       const pct = percentages[macro.key];
       if (pct <= 0) continue;
       const segmentLength = (pct / 100) * availableLength;
+      // Calculate midpoint angle (starting from top, -90deg)
+      const startAngle = (currentOffset / circumference) * 360 - 90;
+      const segmentAngle = (segmentLength / circumference) * 360;
+      const midAngle = startAngle + segmentAngle / 2;
+
       segments.push({
+        key: macro.key,
         color: macro.color,
         length: segmentLength,
         offset: currentOffset,
+        pct,
+        midAngle,
       });
       currentOffset += segmentLength + gap;
     }
@@ -94,7 +110,7 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
 
       {hasAny ? (
         <div className="flex items-center gap-5">
-          {/* Donut chart */}
+          {/* Donut chart with percentage labels */}
           <div className="relative shrink-0">
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
               {/* Background track */}
@@ -104,18 +120,18 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                 r={radius}
                 fill="none"
                 stroke="rgba(255,255,255,0.15)"
-                strokeWidth="10"
+                strokeWidth="12"
               />
               {/* Macro segments */}
               {segments.map((seg, i) => (
                 <motion.circle
-                  key={i}
+                  key={seg.key}
                   cx={center}
                   cy={center}
                   r={radius}
                   fill="none"
                   stroke={seg.color}
-                  strokeWidth="10"
+                  strokeWidth="12"
                   strokeLinecap="round"
                   strokeDasharray={`${seg.length} ${circumference - seg.length}`}
                   initial={{ strokeDashoffset: circumference }}
@@ -128,6 +144,30 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                   transform={`rotate(-90 ${center} ${center})`}
                 />
               ))}
+              {/* Percentage labels on segments */}
+              {segments.map((seg, i) => {
+                const angleRad = (seg.midAngle * Math.PI) / 180;
+                const labelX = center + radius * Math.cos(angleRad);
+                const labelY = center + radius * Math.sin(angleRad);
+                return (
+                  <motion.text
+                    key={`label-${seg.key}`}
+                    x={labelX}
+                    y={labelY}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill="white"
+                    fontSize="10"
+                    fontWeight="700"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 + i * 0.1, duration: 0.4 }}
+                    style={{ textShadow: "0 1px 3px rgba(0,0,0,0.4)" }}
+                  >
+                    {seg.pct}%
+                  </motion.text>
+                );
+              })}
             </svg>
             {/* Center text */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -145,11 +185,11 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
             </div>
           </div>
 
-          {/* Macro legend with percentages */}
+          {/* Macro legend with grams */}
           <div className="flex-1 space-y-3">
             {MACROS.map((macro, i) => {
               const grams = totals[macro.key];
-              const pct = percentages[macro.key];
+              if (percentages[macro.key] <= 0) return null;
               return (
                 <motion.div
                   key={macro.key}
@@ -163,18 +203,10 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
                     style={{ backgroundColor: macro.color }}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-xs font-semibold text-foreground">
-                        {macro.label}
-                      </span>
-                      <span
-                        className="text-lg font-bold tabular-nums leading-none"
-                        style={{ color: macro.color }}
-                      >
-                        {pct}%
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-foreground-muted tabular-nums">
+                    <span className="text-xs font-semibold text-foreground">
+                      {macro.label}
+                    </span>
+                    <span className="text-[10px] text-foreground-muted tabular-nums ml-1.5">
                       {grams}g
                     </span>
                   </div>
