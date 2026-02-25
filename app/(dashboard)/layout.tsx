@@ -12,7 +12,7 @@ export default function DashboardLayout({
     <AuthGuard>
       <div className="mx-auto min-h-screen max-w-lg md:max-w-2xl">
         <OfflineBanner />
-        <main className="px-5 pt-2 pb-28">{children}</main>
+        <main className="px-5 pt-4 pb-28">{children}</main>
         <div
           className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 h-28"
           style={{
