@@ -278,168 +278,174 @@ export function DailySummaryCard({ meals, dayLabel, dietName }: DailySummaryCard
       )}
 
       {hasAny ? (
-        <div className="flex items-start gap-2.5">
-          {/* Donut chart */}
-          <div
-            className="relative shrink-0 cursor-pointer"
-            onClick={handleDonutTap}
-          >
-            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-              <circle
-                cx={center}
-                cy={center}
-                r={radius}
-                fill="none"
-                stroke="rgba(255,255,255,0.15)"
-                strokeWidth="8"
-              />
-              {segments.map((seg, i) => {
-                const isHighlighted = activeIndex === null || activeIndex === seg.macroIndex;
-                return (
-                  <motion.circle
-                    key={seg.key}
-                    cx={center}
-                    cy={center}
-                    r={radius}
-                    fill="none"
-                    stroke={seg.color}
-                    strokeLinecap="round"
-                    strokeDasharray={`${seg.length} ${circumference - seg.length}`}
-                    initial={{ strokeDashoffset: circumference, strokeWidth: 8 }}
-                    animate={{
-                      strokeDashoffset: -seg.offset,
-                      strokeWidth: activeIndex === seg.macroIndex ? 12 : 8,
-                      opacity: isHighlighted ? 1 : 0.3,
-                    }}
-                    transition={{
-                      strokeDashoffset: {
-                        delay: 0.2 + i * 0.15,
-                        duration: 1,
-                        ease: [0.22, 1, 0.36, 1],
-                      },
-                      strokeWidth: { duration: 0.3, ease: "easeOut" },
-                      opacity: { duration: 0.3 },
-                    }}
-                    transform={`rotate(-90 ${center} ${center})`}
-                  />
-                );
-              })}
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeIndex ?? "kcal"}
-                  initial={{ opacity: 0, scale: 0.85 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.85 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex flex-col items-center"
-                >
-                  <span
-                    className="text-lg font-bold tabular-nums leading-none"
-                    style={{ color: centerColor }}
-                  >
-                    {centerValue}
-                  </span>
-                  <span
-                    className="text-[8px] font-medium uppercase tracking-wider mt-0.5"
-                    style={{ color: activeMacro ? activeMacro.color : "var(--foreground-muted)" }}
-                  >
-                    {centerSub}
-                  </span>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Macro legend — compact */}
-          <div className="flex-1 min-w-0 space-y-1.5 pt-0.5">
-            {MACROS.map((macro, i) => {
-              const grams = totals[macro.key];
-              const pct = percentages[macro.key];
-              if (pct <= 0) return null;
-              const isActive = activeIndex === i;
-              return (
-                <motion.div
-                  key={macro.key}
-                  initial={{ opacity: 0, x: 8 }}
-                  animate={{
-                    opacity: activeIndex === null || isActive ? 1 : 0.4,
-                    x: 0,
-                  }}
-                  transition={{ delay: 0.3 + i * 0.1, duration: 0.3 }}
-                  className="cursor-pointer"
-                  onClick={() => setActiveIndex(isActive ? null : i)}
-                >
-                  <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <div className="flex items-center gap-1 min-w-0">
-                      <div
-                        className="h-1.5 w-1.5 rounded-full shrink-0"
-                        style={{ backgroundColor: macro.color }}
-                      />
-                      <span className="text-[10px] font-semibold text-foreground truncate">
-                        {macro.label}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-[9px] text-foreground-muted tabular-nums">
-                        {grams}g
-                      </span>
-                      <span
-                        className="text-[9px] font-bold tabular-nums"
-                        style={{ color: macro.color }}
-                      >
-                        {pct}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: macro.color }}
-                      initial={{ width: 0 }}
+        <div className="flex items-stretch gap-0">
+          {/* ── Left 50%: Donut + Macros ── */}
+          <div className="flex-1 min-w-0 flex flex-col items-center gap-3 pr-4">
+            {/* Donut chart */}
+            <div
+              className="relative cursor-pointer"
+              onClick={handleDonutTap}
+            >
+              <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                <circle
+                  cx={center}
+                  cy={center}
+                  r={radius}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.15)"
+                  strokeWidth="8"
+                />
+                {segments.map((seg, i) => {
+                  const isHighlighted = activeIndex === null || activeIndex === seg.macroIndex;
+                  return (
+                    <motion.circle
+                      key={seg.key}
+                      cx={center}
+                      cy={center}
+                      r={radius}
+                      fill="none"
+                      stroke={seg.color}
+                      strokeLinecap="round"
+                      strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                      initial={{ strokeDashoffset: circumference, strokeWidth: 8 }}
                       animate={{
-                        width: `${pct}%`,
-                        opacity: isActive ? 1 : 0.6,
+                        strokeDashoffset: -seg.offset,
+                        strokeWidth: activeIndex === seg.macroIndex ? 12 : 8,
+                        opacity: isHighlighted ? 1 : 0.3,
                       }}
                       transition={{
-                        width: { delay: 0.4 + i * 0.12, duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+                        strokeDashoffset: {
+                          delay: 0.2 + i * 0.15,
+                          duration: 1,
+                          ease: [0.22, 1, 0.36, 1],
+                        },
+                        strokeWidth: { duration: 0.3, ease: "easeOut" },
                         opacity: { duration: 0.3 },
                       }}
+                      transform={`rotate(-90 ${center} ${center})`}
                     />
-                  </div>
-                </motion.div>
-              );
-            })}
-
-            <div className="flex items-center gap-1 pt-0.5">
-              <div className="flex -space-x-1">
-                {meals.slice(0, 5).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-1.5 w-1.5 rounded-full border border-white/40 ${
-                      i < completedMeals ? "bg-primary" : "bg-white/25"
-                    }`}
-                  />
-                ))}
+                  );
+                })}
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeIndex ?? "kcal"}
+                    initial={{ opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.85 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex flex-col items-center"
+                  >
+                    <span
+                      className="text-lg font-bold tabular-nums leading-none"
+                      style={{ color: centerColor }}
+                    >
+                      {centerValue}
+                    </span>
+                    <span
+                      className="text-[8px] font-medium uppercase tracking-wider mt-0.5"
+                      style={{ color: activeMacro ? activeMacro.color : "var(--foreground-muted)" }}
+                    >
+                      {centerSub}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
               </div>
-              <span className="text-[9px] text-foreground-muted">
-                {completedMeals}/{meals.length} pasti
-              </span>
+            </div>
+
+            {/* Macro bars — full width of left half */}
+            <div className="w-full space-y-1.5">
+              {MACROS.map((macro, i) => {
+                const grams = totals[macro.key];
+                const pct = percentages[macro.key];
+                if (pct <= 0) return null;
+                const isActive = activeIndex === i;
+                return (
+                  <motion.div
+                    key={macro.key}
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{
+                      opacity: activeIndex === null || isActive ? 1 : 0.4,
+                      x: 0,
+                    }}
+                    transition={{ delay: 0.3 + i * 0.1, duration: 0.3 }}
+                    className="cursor-pointer"
+                    onClick={() => setActiveIndex(isActive ? null : i)}
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-0.5">
+                      <div className="flex items-center gap-1 min-w-0">
+                        <div
+                          className="h-1.5 w-1.5 rounded-full shrink-0"
+                          style={{ backgroundColor: macro.color }}
+                        />
+                        <span className="text-[10px] font-semibold text-foreground truncate">
+                          {macro.label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-[9px] text-foreground-muted tabular-nums">
+                          {grams}g
+                        </span>
+                        <span
+                          className="text-[9px] font-bold tabular-nums"
+                          style={{ color: macro.color }}
+                        >
+                          {pct}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-1 rounded-full bg-white/10 overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: macro.color }}
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${pct}%`,
+                          opacity: isActive ? 1 : 0.6,
+                        }}
+                        transition={{
+                          width: { delay: 0.4 + i * 0.12, duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+                          opacity: { duration: 0.3 },
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+                );
+              })}
+
+              <div className="flex items-center gap-1 pt-0.5">
+                <div className="flex -space-x-1">
+                  {meals.slice(0, 5).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1.5 w-1.5 rounded-full border border-white/40 ${
+                        i < completedMeals ? "bg-primary" : "bg-white/25"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-[9px] text-foreground-muted">
+                  {completedMeals}/{meals.length} pasti
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Water drops — right side */}
+          {/* ── Divider ── */}
+          {dayLabel && <div className="w-px bg-white/10 self-stretch" />}
+
+          {/* ── Right 50%: Water ── */}
           {dayLabel && (
-            <div className="shrink-0">
+            <div className="flex-1 min-w-0 flex items-center justify-center pl-4">
               <WaterDrops />
             </div>
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div>
           {meals.length > 0 && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 mb-4">
               <div className="flex -space-x-1">
                 {meals.slice(0, 5).map((_, i) => (
                   <div
