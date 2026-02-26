@@ -248,6 +248,24 @@ html.dark .glass-input:focus {
   box-shadow: 0 0 0 3px rgba(59, 181, 164, 0.12), inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Date input fixes for mobile & dark mode */
+input[type="date"].glass-input {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 44px;
+}
+input[type="date"].glass-input::-webkit-date-and-time-value {
+  text-align: left;
+}
+input[type="date"].glass-input::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}
+html.dark input[type="date"].glass-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.6;
+}
+
 html.dark .auth-gradient {
   background-color: #0F1714;
   background-image:

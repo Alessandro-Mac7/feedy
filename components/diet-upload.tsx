@@ -142,7 +142,7 @@ export function DietUpload({ onUploaded }: DietUploadProps) {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-1.5">
                       Data inizio
@@ -151,7 +151,7 @@ export function DietUpload({ onUploaded }: DietUploadProps) {
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full rounded-xl glass-input px-4 py-2.5 text-sm text-foreground focus:outline-none transition-all"
+                      className="w-full rounded-xl glass-input px-3 py-2.5 text-sm text-foreground focus:outline-none transition-all"
                     />
                   </div>
                   <div>
@@ -162,7 +162,7 @@ export function DietUpload({ onUploaded }: DietUploadProps) {
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full rounded-xl glass-input px-4 py-2.5 text-sm text-foreground focus:outline-none transition-all"
+                      className="w-full rounded-xl glass-input px-3 py-2.5 text-sm text-foreground focus:outline-none transition-all"
                     />
                   </div>
                 </div>
