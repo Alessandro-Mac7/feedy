@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform } from "motion/react";
 import Image from "next/image";
@@ -185,6 +185,75 @@ const SCREENSHOTS = [
       </div>
     ),
   },
+  {
+    label: "Spesa intelligente",
+    content: (
+      <div className="space-y-2.5">
+        <div className="glass-strong rounded-xl p-2.5 flex items-center gap-2">
+          <span className="text-sm">🛒</span>
+          <div>
+            <p className="text-[10px] font-semibold text-foreground">Lista della spesa AI</p>
+            <p className="text-[8px] text-foreground-muted">Solo i giorni rimanenti</p>
+          </div>
+        </div>
+        {[
+          { cat: "🥬 Frutta e Verdura", items: ["Broccoli (di stagione)", "Finocchi", "Arance"] },
+          { cat: "🥩 Carne e Pesce", items: ["Petto di pollo ~600g", "Merluzzo ~400g"] },
+          { cat: "🌾 Cereali e Pane", items: ["Riso basmati 350g", "Pane integrale"] },
+        ].map((g) => (
+          <div key={g.cat} className="glass rounded-xl px-2.5 py-2">
+            <p className="text-[8px] font-bold text-foreground-muted mb-1">{g.cat}</p>
+            {g.items.map((item) => (
+              <div key={item} className="flex items-center gap-1.5 py-0.5">
+                <div className="h-1 w-1 rounded-full bg-primary/40" />
+                <span className="text-[8px] text-foreground">{item}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    label: "Macro settimanali",
+    content: (
+      <div className="space-y-2.5">
+        <div className="glass-strong rounded-xl p-2.5 text-center">
+          <p className="text-[9px] font-semibold text-foreground-muted uppercase tracking-wider mb-1">Media settimanale</p>
+          <p className="text-lg font-bold text-foreground">1.847 <span className="text-[9px] font-normal text-foreground-muted">kcal/giorno</span></p>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {[
+            { label: "Carboidrati", val: "215g", pct: "48%", color: "#4A8AC4" },
+            { label: "Grassi", val: "58g", pct: "28%", color: "#C9A033" },
+            { label: "Proteine", val: "112g", pct: "24%", color: "#B86B4F" },
+          ].map((m) => (
+            <div key={m.label} className="glass rounded-xl p-2 text-center">
+              <div className="h-1 rounded-full mb-1.5" style={{ backgroundColor: m.color }} />
+              <p className="text-[10px] font-bold" style={{ color: m.color }}>{m.val}</p>
+              <p className="text-[7px] text-foreground-muted">{m.label}</p>
+              <p className="text-[7px] font-semibold text-foreground-muted">{m.pct}</p>
+            </div>
+          ))}
+        </div>
+        <div className="glass rounded-xl px-2.5 py-2">
+          <p className="text-[8px] font-semibold text-foreground-muted mb-1.5">Trend giornaliero</p>
+          <div className="flex items-end gap-1 h-8">
+            {[65, 80, 55, 90, 70, 85, 75].map((h, i) => (
+              <div key={i} className="flex-1 rounded-sm bg-primary/20 relative" style={{ height: `${h}%` }}>
+                <div className="absolute inset-x-0 bottom-0 rounded-sm bg-primary" style={{ height: `${h * 0.7}%` }} />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-1">
+            {["L", "M", "M", "G", "V", "S", "D"].map((d, i) => (
+              <span key={i} className="text-[6px] text-foreground-muted/50 flex-1 text-center">{d}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    ),
+  },
 ];
 
 function ScreenshotCarousel() {
@@ -192,16 +261,41 @@ function ScreenshotCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const isPaused = useRef(false);
   const pauseTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const activeRef = useRef(0);
 
-  // Track active index from scroll position
+  // Keep a ref in sync so the interval always reads the latest value
+  useEffect(() => {
+    activeRef.current = activeIndex;
+  }, [activeIndex]);
+
+  /** Scroll so that card[index] is centered in the container */
+  const scrollToCard = useCallback((index: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const card = el.children[index] as HTMLElement | undefined;
+    if (!card) return;
+    const left = card.offsetLeft - (el.offsetWidth - card.offsetWidth) / 2;
+    el.scrollTo({ left, behavior: "smooth" });
+  }, []);
+
+  // Track active index from scroll position using actual card offsets
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const handleScroll = () => {
-      const scrollLeft = el.scrollLeft;
-      const cardWidth = el.offsetWidth * 0.72;
-      const index = Math.round(scrollLeft / cardWidth);
-      setActiveIndex(Math.min(index, SCREENSHOTS.length - 1));
+      const center = el.scrollLeft + el.offsetWidth / 2;
+      let closest = 0;
+      let minDist = Infinity;
+      for (let i = 0; i < el.children.length; i++) {
+        const child = el.children[i] as HTMLElement;
+        const childCenter = child.offsetLeft + child.offsetWidth / 2;
+        const dist = Math.abs(center - childCenter);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = i;
+        }
+      }
+      setActiveIndex(closest);
     };
     el.addEventListener("scroll", handleScroll, { passive: true });
     return () => el.removeEventListener("scroll", handleScroll);
@@ -212,16 +306,10 @@ function ScreenshotCarousel() {
     const el = scrollRef.current;
     if (!el) return;
 
-    const scrollTo = (index: number) => {
-      const cardWidth = el.offsetWidth * 0.72;
-      const gap = 16; // gap-4 = 16px
-      el.scrollTo({ left: index * (cardWidth + gap), behavior: "smooth" });
-    };
-
     const interval = setInterval(() => {
       if (isPaused.current) return;
-      const next = (activeIndex + 1) % SCREENSHOTS.length;
-      scrollTo(next);
+      const next = (activeRef.current + 1) % SCREENSHOTS.length;
+      scrollToCard(next);
     }, 4000);
 
     // Pause on touch/pointer, resume after 6s of inactivity
@@ -241,7 +329,7 @@ function ScreenshotCarousel() {
       el.removeEventListener("touchstart", handleInteraction);
       el.removeEventListener("pointerdown", handleInteraction);
     };
-  }, [activeIndex]);
+  }, [scrollToCard]);
 
   return (
     <section className="relative pb-24">
