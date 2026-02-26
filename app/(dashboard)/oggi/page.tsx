@@ -21,6 +21,7 @@ import { Confetti } from "@/components/confetti";
 import { WeeklyStatsCard } from "@/components/weekly-stats-card";
 import { WeeklyBarChart } from "@/components/weekly-bar-chart";
 import { ShoppingList } from "@/components/shopping-list";
+import { ScrollToTop } from "@/components/scroll-to-top";
 
 interface DietWithMeals extends Diet {
   meals: Meal[];
@@ -352,6 +353,8 @@ export default function OggiPage() {
           </motion.button>
         </motion.div>
       )}
+
+      <ScrollToTop />
     </div>
   );
 }

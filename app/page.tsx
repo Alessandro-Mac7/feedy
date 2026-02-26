@@ -6,22 +6,38 @@ import { motion, useScroll, useTransform } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { authClient } from "@/lib/auth/client";
+import { ScrollToTop } from "@/components/scroll-to-top";
 
 const FEATURES = [
   {
     icon: "📋",
     title: "Importa il tuo piano",
-    description: "Carica la dieta del tuo nutrizionista da CSV in un click.",
+    description: "Carica la dieta del tuo nutrizionista da CSV o JSON in un click.",
   },
   {
     icon: "🤖",
     title: "Stima AI dei macro",
-    description: "Calcola carboidrati, grassi e proteine automaticamente.",
+    description: "L'intelligenza artificiale calcola carboidrati, grassi e proteine per te.",
   },
   {
     icon: "📊",
-    title: "Donut interattivo",
-    description: "Tocca il grafico per esplorare le % di ogni macronutriente.",
+    title: "Macro giornalieri e settimanali",
+    description: "Donut interattivo e statistiche settimanali per monitorare i tuoi progressi.",
+  },
+  {
+    icon: "🛒",
+    title: "Lista della spesa AI",
+    description: "Genera la spesa automaticamente con prodotti di stagione e quantità stimate.",
+  },
+  {
+    icon: "📅",
+    title: "Gestione multi-dieta",
+    description: "Carica più piani alimentari e attiva quello della settimana corrente.",
+  },
+  {
+    icon: "💧",
+    title: "Tracker acqua",
+    description: "Segna i bicchieri d'acqua giornalieri e raggiungi il tuo obiettivo.",
   },
 ];
 
@@ -561,7 +577,7 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {FEATURES.map((f, i) => (
               <motion.div
                 key={f.title}
@@ -569,7 +585,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{
-                  delay: i * 0.1,
+                  delay: i * 0.08,
                   duration: 0.6,
                   ease: [0.22, 1, 0.36, 1],
                 }}
@@ -606,6 +622,9 @@ export default function LandingPage() {
             <h2 className="font-display text-3xl text-foreground mb-3">
               Come funziona
             </h2>
+            <p className="text-foreground-muted text-sm max-w-[300px] mx-auto leading-relaxed">
+              Tre passi per avere il tuo piano pasti sempre a portata di mano.
+            </p>
           </motion.div>
 
           <div className="space-y-4">
@@ -613,20 +632,17 @@ export default function LandingPage() {
               {
                 step: "01",
                 title: "Carica la dieta",
-                desc: "Esporta il piano del nutrizionista in CSV e caricalo su Feedy.",
-                accent: false,
+                desc: "Importa il piano del tuo nutrizionista da CSV o JSON. Feedy organizza tutto in pasti giornalieri.",
               },
               {
                 step: "02",
-                title: "Consulta ogni giorno",
-                desc: "Apri l'app e vedi subito cosa mangiare — il pasto corrente è in evidenza.",
-                accent: false,
+                title: "Segui il piano giorno per giorno",
+                desc: "Ogni giorno vedi i tuoi pasti, completa quelli fatti e l'AI stima i macro automaticamente.",
               },
               {
                 step: "03",
-                title: "Traccia i macro",
-                desc: "Lascia che l'AI stimi i valori nutrizionali o inseriscili manualmente.",
-                accent: false,
+                title: "Fai la spesa e monitora",
+                desc: "Genera la lista della spesa con AI, consulta i macro settimanali e tieni tutto sotto controllo.",
               },
             ].map((s, i) => (
               <motion.div
@@ -639,9 +655,7 @@ export default function LandingPage() {
                   duration: 0.6,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className={`flex items-start gap-4 rounded-2xl p-5 ${
-                  s.accent ? "glass-accent" : "glass"
-                }`}
+                className="flex items-start gap-4 rounded-2xl p-5 glass"
               >
                 <span className="shrink-0 font-display text-3xl text-primary/25 leading-none select-none">
                   {s.step}
@@ -701,6 +715,8 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+
+      <ScrollToTop />
     </div>
   );
 }
