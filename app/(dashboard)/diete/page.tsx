@@ -135,41 +135,39 @@ export default function DietePage() {
                     : "glass"
                 )}
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-foreground">
-                        {diet.dietName}
-                      </h3>
-                      {diet.isActive && (
-                        <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider">
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                          Attiva
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-foreground-muted mt-0.5">
-                      {diet.startDate} → {diet.endDate}
-                    </p>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-foreground">
+                      {diet.dietName}
+                    </h3>
+                    {diet.isActive && (
+                      <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        Attiva
+                      </span>
+                    )}
                   </div>
-                  <div className="flex gap-2">
+                  <p className="text-xs text-foreground-muted">
+                    {diet.startDate} → {diet.endDate}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
                     <Link
                       href={`/diete/${diet.id}/modifica`}
-                      className="rounded-xl bg-primary/12 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors min-h-[36px] flex items-center"
+                      className="rounded-xl bg-primary/12 px-3 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors flex items-center"
                     >
                       Modifica
                     </Link>
                     {!diet.isActive && (
                       <button
                         onClick={() => handleActivate(diet.id)}
-                        className="rounded-xl bg-primary/12 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors min-h-[36px]"
+                        className="rounded-xl bg-primary/12 px-3 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors"
                       >
                         Attiva
                       </button>
                     )}
                     <button
                       onClick={() => setDeleteTarget(diet)}
-                      className="rounded-xl bg-danger/8 px-3.5 py-2 text-xs font-semibold text-danger hover:bg-danger/15 transition-colors min-h-[36px]"
+                      className="rounded-xl bg-danger/8 px-3 py-1.5 text-[11px] font-semibold text-danger hover:bg-danger/15 transition-colors"
                     >
                       Elimina
                     </button>

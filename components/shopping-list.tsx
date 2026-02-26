@@ -484,39 +484,29 @@ export function ShoppingList({ open, onClose }: ShoppingListProps) {
           </div>
 
           {/* Fixed bottom bar */}
-          <div className="shrink-0 glass-strong border-t border-glass-border px-4 py-3 safe-area-bottom">
-            <div className="flex items-center gap-3">
-              <motion.button
-                type="button"
-                onClick={handleCopy}
-                whileTap={{ scale: 0.96 }}
-                disabled={loading || !shoppingList}
-                className="flex-1 rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary-light transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          <div className="shrink-0 backdrop-blur-xl bg-glass-bg/80 border-t border-glass-border px-4 py-3 safe-area-bottom">
+            <motion.button
+              type="button"
+              onClick={handleCopy}
+              whileTap={{ scale: 0.96 }}
+              disabled={loading || !shoppingList}
+              className="w-full rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary-light transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                Copia lista
-              </motion.button>
-              <motion.button
-                type="button"
-                onClick={onClose}
-                whileTap={{ scale: 0.96 }}
-                className="rounded-2xl glass px-5 py-3 text-sm font-semibold text-foreground-muted hover:text-foreground transition-colors"
-              >
-                Chiudi
-              </motion.button>
-            </div>
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              Copia lista
+            </motion.button>
           </div>
         </motion.div>
       )}
