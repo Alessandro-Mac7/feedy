@@ -106,13 +106,13 @@ export default function AuthPage() {
       >
         <div className="glass rounded-3xl p-6">
           {/* Tab switcher */}
-          <div className="mb-6 flex rounded-2xl bg-white/20 p-1">
+          <div className="mb-6 flex rounded-2xl bg-white/20 dark:bg-white/8 p-1">
             <button
               type="button"
               onClick={() => mode !== "sign-in" && switchMode()}
               className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 ${
                 mode === "sign-in"
-                  ? "bg-white/70 text-foreground shadow-sm"
+                  ? "bg-white/70 dark:bg-white/15 text-foreground shadow-sm"
                   : "text-foreground-muted hover:text-foreground"
               }`}
             >
@@ -123,7 +123,7 @@ export default function AuthPage() {
               onClick={() => mode !== "sign-up" && switchMode()}
               className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 ${
                 mode === "sign-up"
-                  ? "bg-white/70 text-foreground shadow-sm"
+                  ? "bg-white/70 dark:bg-white/15 text-foreground shadow-sm"
                   : "text-foreground-muted hover:text-foreground"
               }`}
             >

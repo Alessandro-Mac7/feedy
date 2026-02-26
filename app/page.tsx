@@ -67,8 +67,8 @@ const SCREENSHOTS = [
     content: (
       <div className="space-y-2.5">
         {/* Donut */}
-        <div className="glass rounded-xl p-3 flex flex-col items-center">
-          <svg width="70" height="70" viewBox="0 0 70 70">
+        <div className="glass rounded-xl p-2.5 flex flex-col items-center">
+          <svg width="60" height="60" viewBox="0 0 70 70">
             <circle cx="35" cy="35" r="26" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="7" />
             <circle cx="35" cy="35" r="26" fill="none" stroke="#4A8AC4" strokeWidth="7" strokeLinecap="round"
               strokeDasharray={`${2 * Math.PI * 26 * 0.46} ${2 * Math.PI * 26 * 0.54}`}
@@ -84,16 +84,15 @@ const SCREENSHOTS = [
             <text x="35" y="33" textAnchor="middle" className="text-[11px] font-bold fill-foreground">1.847</text>
             <text x="35" y="42" textAnchor="middle" className="text-[7px] fill-foreground-muted">kcal</text>
           </svg>
-          <div className="flex gap-3 mt-2">
+          <div className="flex gap-2 mt-1.5">
             {[
-              { label: "Carb", val: "48%", color: "#4A8AC4" },
-              { label: "Grassi", val: "28%", color: "#C9A033" },
-              { label: "Prot", val: "24%", color: "#B86B4F" },
+              { label: "C", val: "48%", color: "#4A8AC4" },
+              { label: "G", val: "28%", color: "#C9A033" },
+              { label: "P", val: "24%", color: "#B86B4F" },
             ].map((m) => (
-              <div key={m.label} className="flex items-center gap-1">
-                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: m.color }} />
-                <span className="text-[8px] font-semibold text-foreground">{m.label}</span>
-                <span className="text-[8px] font-bold" style={{ color: m.color }}>{m.val}</span>
+              <div key={m.label} className="flex items-center gap-0.5">
+                <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: m.color }} />
+                <span className="text-[7px] font-bold" style={{ color: m.color }}>{m.label} {m.val}</span>
               </div>
             ))}
           </div>
@@ -240,7 +239,7 @@ function ScreenshotCarousel() {
               className="w-[72%] shrink-0 snap-center"
             >
               <div
-                className={`glass-strong rounded-[1.75rem] p-5 shadow-xl transition-all duration-300 ${
+                className={`glass-strong rounded-[1.75rem] p-4 shadow-xl transition-all duration-300 overflow-hidden ${
                   activeIndex === i
                     ? "shadow-primary/10 scale-100"
                     : "shadow-primary/4 scale-[0.96] opacity-60"
@@ -382,7 +381,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/auth/sign-in"
-              className="rounded-2xl glass px-7 py-3.5 text-sm font-bold text-foreground transition-all hover:bg-white/70 active:scale-[0.97]"
+              className="rounded-2xl glass px-7 py-3.5 text-sm font-bold text-foreground transition-all hover:bg-white/70 dark:hover:bg-white/15 active:scale-[0.97]"
             >
               Accedi
             </Link>
