@@ -190,7 +190,10 @@ const SCREENSHOTS = [
 function ScreenshotCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const isPaused = useRef(false);
+  const pauseTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  // Track active index from scroll position
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -203,6 +206,42 @@ function ScreenshotCarousel() {
     el.addEventListener("scroll", handleScroll, { passive: true });
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Auto-play: advance every 4s, pause on user interaction
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const scrollTo = (index: number) => {
+      const cardWidth = el.offsetWidth * 0.72;
+      const gap = 16; // gap-4 = 16px
+      el.scrollTo({ left: index * (cardWidth + gap), behavior: "smooth" });
+    };
+
+    const interval = setInterval(() => {
+      if (isPaused.current) return;
+      const next = (activeIndex + 1) % SCREENSHOTS.length;
+      scrollTo(next);
+    }, 4000);
+
+    // Pause on touch/pointer, resume after 6s of inactivity
+    const handleInteraction = () => {
+      isPaused.current = true;
+      clearTimeout(pauseTimeout.current);
+      pauseTimeout.current = setTimeout(() => {
+        isPaused.current = false;
+      }, 6000);
+    };
+
+    el.addEventListener("touchstart", handleInteraction, { passive: true });
+    el.addEventListener("pointerdown", handleInteraction);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(pauseTimeout.current);
+      el.removeEventListener("touchstart", handleInteraction);
+      el.removeEventListener("pointerdown", handleInteraction);
+    };
+  }, [activeIndex]);
 
   return (
     <section className="relative pb-24">
@@ -236,10 +275,10 @@ function ScreenshotCarousel() {
           {SCREENSHOTS.map((screen, i) => (
             <div
               key={screen.label}
-              className="w-[72%] shrink-0 snap-center"
+              className="w-[72%] shrink-0 snap-center flex flex-col"
             >
               <div
-                className={`glass-strong rounded-[1.75rem] p-4 shadow-xl transition-all duration-300 overflow-hidden ${
+                className={`glass-strong rounded-[1.75rem] p-4 shadow-xl transition-all duration-300 overflow-hidden flex-1 flex flex-col ${
                   activeIndex === i
                     ? "shadow-primary/10 scale-100"
                     : "shadow-primary/4 scale-[0.96] opacity-60"
@@ -254,7 +293,7 @@ function ScreenshotCarousel() {
                     <div className="h-1 w-2.5 rounded-sm bg-foreground-muted/25" />
                   </div>
                 </div>
-                {screen.content}
+                <div className="flex-1">{screen.content}</div>
               </div>
               <p className="mt-3 text-center text-xs font-semibold text-foreground-muted">
                 {screen.label}
