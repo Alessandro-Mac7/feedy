@@ -34,6 +34,22 @@ export async function PATCH(
   const body = await req.json();
   const { foods, carbs, fats, proteins, notes, isCompleted } = body;
 
+  // If diet was created by a nutritionist, patient can only toggle isCompleted
+  if (row.diet.createdBy) {
+    if (typeof isCompleted === "boolean") {
+      const [updated] = await db
+        .update(meals)
+        .set({ isCompleted })
+        .where(eq(meals.id, id))
+        .returning();
+      return NextResponse.json(updated);
+    }
+    return NextResponse.json(
+      { error: "Non puoi modificare i pasti di una dieta del nutrizionista." },
+      { status: 403 }
+    );
+  }
+
   const macrosProvided =
     carbs !== undefined ||
     fats !== undefined ||
@@ -98,6 +114,13 @@ export async function DELETE(
 
   if (!row) {
     return NextResponse.json({ error: "Pasto non trovato" }, { status: 404 });
+  }
+
+  if (row.diet.createdBy) {
+    return NextResponse.json(
+      { error: "Non puoi eliminare i pasti di una dieta del nutrizionista." },
+      { status: 403 }
+    );
   }
 
   await db.delete(meals).where(eq(meals.id, id));

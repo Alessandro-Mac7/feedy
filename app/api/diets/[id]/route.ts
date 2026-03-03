@@ -52,6 +52,13 @@ export async function DELETE(
     return NextResponse.json({ error: "Dieta non trovata" }, { status: 404 });
   }
 
+  if (diet.createdBy) {
+    return NextResponse.json(
+      { error: "Non puoi eliminare una dieta creata dal nutrizionista." },
+      { status: 403 }
+    );
+  }
+
   await db.delete(diets).where(eq(diets.id, id));
 
   return NextResponse.json({ ok: true });

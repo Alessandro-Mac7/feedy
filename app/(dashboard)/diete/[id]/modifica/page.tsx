@@ -79,6 +79,8 @@ export default function ModificaDietaPage() {
     );
   }
 
+  const isNutritionistDiet = !!diet.createdBy;
+
   return (
     <div className="space-y-5">
       <motion.div
@@ -105,7 +107,9 @@ export default function ModificaDietaPage() {
           </svg>
         </Link>
         <div>
-          <p className="text-xs text-foreground-muted">Modifica</p>
+          <p className="text-xs text-foreground-muted">
+            {isNutritionistDiet ? "Visualizza" : "Modifica"}
+          </p>
           <h1 className="font-display text-2xl text-foreground -mt-0.5">
             {diet.dietName}
           </h1>
@@ -142,16 +146,19 @@ export default function ModificaDietaPage() {
                   index={i}
                   onUpdated={loadDiet}
                   onDeleted={loadDiet}
+                  readOnly={isNutritionistDiet}
                 />
               ))}
             </div>
           )}
 
-          <AddMealForm
-            dietId={diet.id}
-            selectedDay={selectedDay}
-            onAdded={loadDiet}
-          />
+          {!isNutritionistDiet && (
+            <AddMealForm
+              dietId={diet.id}
+              selectedDay={selectedDay}
+              onAdded={loadDiet}
+            />
+          )}
         </motion.div>
       </AnimatePresence>
     </div>

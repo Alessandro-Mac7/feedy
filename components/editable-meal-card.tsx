@@ -14,6 +14,7 @@ interface EditableMealCardProps {
   onUpdated: () => void;
   onDeleted: () => void;
   mealApiBase?: string;
+  readOnly?: boolean;
 }
 
 export function EditableMealCard({
@@ -22,6 +23,7 @@ export function EditableMealCard({
   onUpdated,
   onDeleted,
   mealApiBase = "/api/meals",
+  readOnly = false,
 }: EditableMealCardProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -161,20 +163,22 @@ export function EditableMealCard({
                   </div>
                 )}
 
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={handleStartEdit}
-                    className="rounded-xl bg-primary/12 px-3.5 py-2.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors min-h-[44px]"
-                  >
-                    Modifica
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteDialog(true)}
-                    className="rounded-xl bg-danger/8 px-3.5 py-2.5 text-xs font-semibold text-danger hover:bg-danger/15 transition-colors min-h-[44px]"
-                  >
-                    Elimina
-                  </button>
-                </div>
+                {!readOnly && (
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={handleStartEdit}
+                      className="rounded-xl bg-primary/12 px-3.5 py-2.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors min-h-[44px]"
+                    >
+                      Modifica
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="rounded-xl bg-danger/8 px-3.5 py-2.5 text-xs font-semibold text-danger hover:bg-danger/15 transition-colors min-h-[44px]"
+                    >
+                      Elimina
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

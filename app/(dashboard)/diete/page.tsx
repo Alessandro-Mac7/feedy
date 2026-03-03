@@ -197,7 +197,7 @@ export default function DietePage() {
                       href={`/diete/${diet.id}/modifica`}
                       className="rounded-xl bg-primary/12 px-3 py-1.5 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors flex items-center"
                     >
-                      Modifica
+                      {diet.createdBy ? "Visualizza" : "Modifica"}
                     </Link>
                     {!diet.isActive && (
                       <button
@@ -207,12 +207,14 @@ export default function DietePage() {
                         Attiva
                       </button>
                     )}
-                    <button
-                      onClick={() => setDeleteTarget(diet)}
-                      className="rounded-xl bg-danger/8 px-3 py-1.5 text-[11px] font-semibold text-danger hover:bg-danger/15 transition-colors"
-                    >
-                      Elimina
-                    </button>
+                    {!diet.createdBy && (
+                      <button
+                        onClick={() => setDeleteTarget(diet)}
+                        className="rounded-xl bg-danger/8 px-3 py-1.5 text-[11px] font-semibold text-danger hover:bg-danger/15 transition-colors"
+                      >
+                        Elimina
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.div>
