@@ -1,11 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/toast";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
+
+interface NutritionistAssociation {
+  id: string;
+  nutritionistName: string;
+  nutritionistEmail: string;
+  confirmed: boolean;
+  addedAt: string;
+}
 
 interface Goals {
   dailyKcal: number;
@@ -31,7 +39,51 @@ export default function ImpostazioniPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [goals, setGoals] = useState<Goals>(DEFAULT_GOALS);
   const [savingGoals, setSavingGoals] = useState(false);
+  const [nutritionists, setNutritionists] = useState<NutritionistAssociation[]>([]);
+  const [nutLoading, setNutLoading] = useState(true);
+  const [nutResponding, setNutResponding] = useState<string | null>(null);
+  const [nutRemoveTarget, setNutRemoveTarget] = useState<NutritionistAssociation | null>(null);
   const { toast } = useToast();
+
+  const loadNutritionists = useCallback(async () => {
+    try {
+      const res = await fetch("/api/patient/nutritionist");
+      if (res.ok) {
+        const data: NutritionistAssociation[] = await res.json();
+        setNutritionists(data);
+      }
+    } catch { /* ignore */ } finally {
+      setNutLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNutritionists();
+  }, [loadNutritionists]);
+
+  async function handleNutResponse(id: string, action: "confirm" | "reject") {
+    setNutResponding(id);
+    try {
+      const res = await fetch(
+        `/api/patient/nutritionist?id=${id}&action=${action}`,
+        { method: "PATCH" }
+      );
+      if (res.ok) {
+        toast(
+          action === "confirm" ? "Nutrizionista confermato!" : "Richiesta rifiutata.",
+          action === "confirm" ? "success" : "info"
+        );
+        loadNutritionists();
+        setNutRemoveTarget(null);
+      } else {
+        toast("Errore nella risposta.", "error");
+      }
+    } catch {
+      toast("Errore di connessione.", "error");
+    } finally {
+      setNutResponding(null);
+    }
+  }
 
   const loadGoals = useCallback(async () => {
     try {
@@ -168,6 +220,86 @@ export default function ImpostazioniPage() {
           </div>
         ) : (
           <p className="text-sm text-foreground-muted">Non autenticato</p>
+        )}
+      </motion.div>
+
+      {/* Nutritionist */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.07 }}
+        className="glass rounded-2xl p-5"
+      >
+        <h2 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3">
+          Il tuo nutrizionista
+        </h2>
+        {nutLoading ? (
+          <div className="space-y-2">
+            <div className="h-5 w-40 rounded-lg skeleton-shimmer" />
+            <div className="h-4 w-56 rounded-lg skeleton-shimmer" />
+          </div>
+        ) : nutritionists.length === 0 ? (
+          <p className="text-sm text-foreground-muted">
+            Nessun nutrizionista associato.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            <AnimatePresence mode="popLayout">
+              {nutritionists.map((nut) => (
+                <motion.div
+                  key={nut.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex items-center gap-3"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/12 text-sm font-bold text-primary shrink-0">
+                    {nut.nutritionistName[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {nut.nutritionistName}
+                      </p>
+                      {!nut.confirmed && (
+                        <span className="shrink-0 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent uppercase tracking-wider">
+                          In attesa
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-foreground-muted truncate">
+                      {nut.nutritionistEmail}
+                    </p>
+                  </div>
+                  {nut.confirmed ? (
+                    <button
+                      onClick={() => setNutRemoveTarget(nut)}
+                      className="shrink-0 rounded-xl bg-danger/8 px-3 py-1.5 text-[11px] font-semibold text-danger hover:bg-danger/15 transition-colors"
+                    >
+                      Rimuovi
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleNutResponse(nut.id, "confirm")}
+                        disabled={nutResponding === nut.id}
+                        className="rounded-xl bg-primary px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-primary-light transition-colors disabled:opacity-60"
+                      >
+                        Accetta
+                      </button>
+                      <button
+                        onClick={() => handleNutResponse(nut.id, "reject")}
+                        disabled={nutResponding === nut.id}
+                        className="rounded-xl glass px-3 py-1.5 text-[11px] font-semibold text-danger hover:bg-danger/8 transition-colors disabled:opacity-60"
+                      >
+                        Rifiuta
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         )}
       </motion.div>
 
@@ -333,6 +465,19 @@ export default function ImpostazioniPage() {
         <p className="font-display text-lg text-foreground-muted/40">Feedy</p>
         <p className="text-xs text-foreground-muted/30">v0.1.0</p>
       </motion.div>
+
+      <DeleteConfirmDialog
+        open={!!nutRemoveTarget}
+        onClose={() => setNutRemoveTarget(null)}
+        onConfirm={() => nutRemoveTarget && handleNutResponse(nutRemoveTarget.id, "reject")}
+        loading={!!nutResponding}
+        title="Rimuovere il nutrizionista?"
+        description={
+          nutRemoveTarget
+            ? `Stai per rimuovere "${nutRemoveTarget.nutritionistName}" come tuo nutrizionista. Non potrà più gestire le tue diete.`
+            : ""
+        }
+      />
 
       <DeleteConfirmDialog
         open={showDeleteDialog}

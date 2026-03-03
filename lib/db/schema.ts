@@ -89,6 +89,7 @@ export const nutritionistPatients = pgTable(
     patientUserId: text("patient_user_id").notNull(),
     patientEmail: text("patient_email").notNull(),
     patientName: text("patient_name"),
+    confirmed: boolean().notNull().default(false),
     addedAt: timestamp("added_at").defaultNow().notNull(),
   },
   (table) => [
