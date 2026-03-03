@@ -12,7 +12,9 @@
  *   - Il file .env.local deve contenere DATABASE_URL
  */
 
-import "dotenv/config";
+import { config } from "dotenv";
+config({ path: ".env.local" });
+config();
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { nutritionists } from "../lib/db/schema";
@@ -38,11 +40,8 @@ async function main() {
   const sql = neon(process.env.DATABASE_URL!);
   const db = drizzle(sql);
 
-  // Cerca l'utente nella tabella auth di Neon (schema "auth")
-  const users = await sql(
-    `SELECT id, email, name FROM "auth"."users" WHERE email = $1 LIMIT 1`,
-    [email]
-  );
+  // Cerca l'utente nella tabella auth di Neon (schema "neon_auth")
+  const users = await sql`SELECT id, email, name FROM "neon_auth"."user" WHERE email = ${email} LIMIT 1`;
 
   if (users.length === 0) {
     console.error(`\nUtente con email "${email}" non trovato.`);

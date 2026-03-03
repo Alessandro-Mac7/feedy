@@ -10,9 +10,10 @@ interface AddMealFormProps {
   dietId: string;
   selectedDay: Day;
   onAdded: () => void;
+  mealsApiEndpoint?: string;
 }
 
-export function AddMealForm({ dietId, selectedDay, onAdded }: AddMealFormProps) {
+export function AddMealForm({ dietId, selectedDay, onAdded, mealsApiEndpoint }: AddMealFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mealType, setMealType] = useState<MealType>("Colazione");
   const [foods, setFoods] = useState("");
@@ -44,7 +45,8 @@ export function AddMealForm({ dietId, selectedDay, onAdded }: AddMealFormProps) 
     setError(null);
 
     try {
-      const res = await fetch(`/api/diets/${dietId}/meals`, {
+      const endpoint = mealsApiEndpoint || `/api/diets/${dietId}/meals`;
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

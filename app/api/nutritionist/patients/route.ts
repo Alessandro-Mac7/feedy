@@ -38,9 +38,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Resolve email → userId via Neon Auth users_sync table
+  // Resolve email → userId + name via Neon Auth user table
   const userRows = await db.execute(
-    sql`SELECT id FROM neon_auth.users_sync WHERE email = ${email.trim().toLowerCase()}`
+    sql`SELECT id, name FROM "neon_auth"."user" WHERE email = ${email.trim().toLowerCase()}`
   );
 
   if (!userRows.rows.length) {
@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
   }
 
   const patientUserId = userRows.rows[0].id as string;
+  const patientName = (userRows.rows[0].name as string) || name?.trim() || null;
 
   // Check if already added
   const existing = await db
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
       nutritionistId: nutritionist.id,
       patientUserId,
       patientEmail: email.trim().toLowerCase(),
-      patientName: name?.trim() || null,
+      patientName,
     })
     .returning();
 

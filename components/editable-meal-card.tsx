@@ -13,6 +13,7 @@ interface EditableMealCardProps {
   index: number;
   onUpdated: () => void;
   onDeleted: () => void;
+  mealApiBase?: string;
 }
 
 export function EditableMealCard({
@@ -20,6 +21,7 @@ export function EditableMealCard({
   index,
   onUpdated,
   onDeleted,
+  mealApiBase = "/api/meals",
 }: EditableMealCardProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -58,7 +60,7 @@ export function EditableMealCard({
     if (!foods.trim()) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/meals/${meal.id}`, {
+      const res = await fetch(`${mealApiBase}/${meal.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -86,7 +88,7 @@ export function EditableMealCard({
   async function handleDelete() {
     setDeleting(true);
     try {
-      const res = await fetch(`/api/meals/${meal.id}`, { method: "DELETE" });
+      const res = await fetch(`${mealApiBase}/${meal.id}`, { method: "DELETE" });
       if (res.ok) {
         setShowDeleteDialog(false);
         toast("Pasto eliminato", "success");

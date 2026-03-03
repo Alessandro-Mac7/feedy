@@ -320,3 +320,9 @@ html.dark .skeleton-shimmer {
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
+
+/* Badge shimmer gradient shift */
+@keyframes shimmer-badge {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import { AuthGuard } from "@/components/auth-guard";
 import { cn } from "@/lib/utils";
@@ -146,7 +147,19 @@ export default function NutritionistLayout({
     <AuthGuard>
       <NutritionistGuard>
         <div className="mx-auto min-h-screen max-w-lg md:max-w-2xl">
-          <main className="px-5 pt-4 pb-28">{children}</main>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center pt-4 md:pt-6 pb-1 px-5"
+          >
+            <Image
+              src="/logo.png"
+              alt="Feedy"
+              width={140}
+              height={35}
+            />
+          </motion.div>
+          <main className="px-5 pt-2 pb-28">{children}</main>
           <div
             className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 h-28"
             style={{

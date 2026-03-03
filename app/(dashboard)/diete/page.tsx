@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { DietUpload } from "@/components/diet-upload";
@@ -9,29 +9,64 @@ import { cn } from "@/lib/utils";
 import type { Diet } from "@/types";
 import { useToast } from "@/components/toast";
 import { EmptyDiets } from "@/components/illustrations/empty-diets";
+import { CreatorBadge } from "@/components/creator-badge";
+
+interface DietWithCreator extends Diet {
+  creatorName?: string | null;
+  creatorEmail?: string | null;
+}
+
+const PAGE_SIZE = 10;
 
 export default function DietePage() {
-  const [diets, setDiets] = useState<Diet[]>([]);
+  const [diets, setDiets] = useState<DietWithCreator[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deleteTarget, setDeleteTarget] = useState<Diet | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<DietWithCreator | null>(null);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
+  const observerRef = useRef<HTMLDivElement>(null);
 
-  const loadDiets = useCallback(async () => {
+  const loadDiets = useCallback(async (reset = true) => {
     try {
-      const res = await fetch("/api/diets");
+      const offset = reset ? 0 : diets.length;
+      if (!reset) setLoadingMore(true);
+      const res = await fetch(`/api/diets?limit=${PAGE_SIZE}&offset=${offset}`);
       if (res.ok) {
-        const data = await res.json();
-        setDiets(data);
+        const data: DietWithCreator[] = await res.json();
+        if (reset) {
+          setDiets(data);
+        } else {
+          setDiets((prev) => [...prev, ...data]);
+        }
+        setHasMore(data.length === PAGE_SIZE);
       }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     loadDiets();
   }, [loadDiets]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!observerRef.current || !hasMore || loading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore && hasMore) {
+          loadDiets(false);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, loadDiets]);
 
   async function handleActivate(id: string) {
     try {
@@ -76,7 +111,7 @@ export default function DietePage() {
         Le tue diete
       </motion.h1>
 
-      <DietUpload onUploaded={loadDiets} />
+      <DietUpload onUploaded={() => loadDiets()} />
 
       <Link
         href="/diete/nuova"
@@ -136,7 +171,7 @@ export default function DietePage() {
                 )}
               >
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold text-foreground">
                       {diet.dietName}
                     </h3>
@@ -145,6 +180,13 @@ export default function DietePage() {
                         <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                         Attiva
                       </span>
+                    )}
+                    {diet.createdBy && (
+                      <CreatorBadge
+                        label="Pro"
+                        creatorName={diet.creatorName}
+                        creatorEmail={diet.creatorEmail}
+                      />
                     )}
                   </div>
                   <p className="text-xs text-foreground-muted">
@@ -175,6 +217,21 @@ export default function DietePage() {
                 </div>
               </motion.div>
             ))}
+
+            {/* Infinite scroll sentinel */}
+            {hasMore && (
+              <div ref={observerRef} className="flex justify-center py-4">
+                {loadingMore && (
+                  <div className="flex items-center gap-2 text-sm text-foreground-muted">
+                    <svg width="16" height="16" viewBox="0 0 24 24" className="animate-spin">
+                      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="3" opacity="0.3" />
+                      <path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                    Caricamento...
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </AnimatePresence>
       )}

@@ -1,16 +1,22 @@
 import { NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth/server";
+import { verifyNutritionist } from "@/lib/auth/nutritionist";
 import { db } from "@/lib/db";
 import { diets, meals } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { estimateMacros } from "@/lib/groq/estimate";
 
-async function verifyMealOwnership(mealId: string, userId: string) {
+async function verifyNutritionistMealAccess(mealId: string, nutritionistUserId: string) {
   const [row] = await db
     .select({ meal: meals, diet: diets })
     .from(meals)
     .innerJoin(diets, eq(meals.dietId, diets.id))
-    .where(and(eq(meals.id, mealId), eq(diets.userId, userId)));
+    .where(
+      and(
+        eq(meals.id, mealId),
+        eq(diets.createdBy, nutritionistUserId)
+      )
+    );
 
   return row;
 }
@@ -20,19 +26,20 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.getSession();
-  if (!session?.data?.user) {
+  const nutritionist = await verifyNutritionist(session);
+  if (!nutritionist) {
     return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
   }
 
   const { id } = await params;
-  const row = await verifyMealOwnership(id, session.data.user.id);
+  const row = await verifyNutritionistMealAccess(id, nutritionist.userId);
 
   if (!row) {
     return NextResponse.json({ error: "Pasto non trovato" }, { status: 404 });
   }
 
   const body = await req.json();
-  const { foods, carbs, fats, proteins, notes, isCompleted } = body;
+  const { foods, carbs, fats, proteins, notes } = body;
 
   const macrosProvided =
     carbs !== undefined ||
@@ -53,7 +60,6 @@ export async function PATCH(
       ...(fats !== undefined && { fats }),
       ...(proteins !== undefined && { proteins }),
       ...(notes !== undefined && { notes }),
-      ...(isCompleted !== undefined && { isCompleted }),
       ...(macrosProvided && { isAiEstimated: false }),
       ...(shouldReEstimate && { isAiEstimated: true }),
     })
@@ -74,7 +80,7 @@ export async function PATCH(
             isAiEstimated: true,
           })
           .where(eq(meals.id, id));
-        console.log(`[AI Macro] Re-stimato pasto ${id} dopo modifica alimenti`);
+        console.log(`[AI Macro] Re-stimato pasto ${id} dopo modifica alimenti (nutritionist)`);
       } catch (err) {
         console.error(`[AI Macro] Errore re-stima pasto ${id}:`, err);
       }
@@ -89,12 +95,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.getSession();
-  if (!session?.data?.user) {
+  const nutritionist = await verifyNutritionist(session);
+  if (!nutritionist) {
     return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
   }
 
   const { id } = await params;
-  const row = await verifyMealOwnership(id, session.data.user.id);
+  const row = await verifyNutritionistMealAccess(id, nutritionist.userId);
 
   if (!row) {
     return NextResponse.json({ error: "Pasto non trovato" }, { status: 404 });
