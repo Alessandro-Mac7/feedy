@@ -10,9 +10,10 @@ import { useToast } from "@/components/toast";
 
 interface DietUploadProps {
   onUploaded: () => void;
+  apiEndpoint?: string;
 }
 
-export function DietUpload({ onUploaded }: DietUploadProps) {
+export function DietUpload({ onUploaded, apiEndpoint }: DietUploadProps) {
   const [dietName, setDietName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -50,7 +51,7 @@ export function DietUpload({ onUploaded }: DietUploadProps) {
     setError(null);
 
     try {
-      const res = await fetch("/api/diets", {
+      const res = await fetch(apiEndpoint ?? "/api/diets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

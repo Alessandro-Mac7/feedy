@@ -25,6 +25,22 @@ export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  async function redirectByRole() {
+    try {
+      const meRes = await fetch("/api/nutritionist/me");
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        if (meData.isNutritionist) {
+          router.replace("/nutrizionista");
+          return;
+        }
+      }
+    } catch {
+      // fallback to patient route
+    }
+    router.replace("/oggi");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -39,7 +55,7 @@ export default function AuthPage() {
           toast(translateError(error.message ?? "Errore durante l'accesso"), "error");
         } else {
           toast("Bentornato!", "success");
-          router.replace("/oggi");
+          await redirectByRole();
         }
       } else {
         if (!name.trim()) {
@@ -56,7 +72,7 @@ export default function AuthPage() {
           toast(translateError(error.message ?? "Errore durante la registrazione"), "error");
         } else {
           toast("Account creato! Benvenuto!", "success");
-          router.replace("/oggi");
+          await redirectByRole();
         }
       }
     } catch {

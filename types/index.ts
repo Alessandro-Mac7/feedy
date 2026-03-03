@@ -1,8 +1,17 @@
 import type { InferSelectModel } from "drizzle-orm";
-import type { diets, meals } from "@/lib/db/schema";
+import type {
+  diets,
+  meals,
+  nutritionists,
+  nutritionistPatients,
+} from "@/lib/db/schema";
 
 export type Diet = InferSelectModel<typeof diets>;
 export type Meal = InferSelectModel<typeof meals>;
+export type Nutritionist = InferSelectModel<typeof nutritionists>;
+export type NutritionistPatient = InferSelectModel<
+  typeof nutritionistPatients
+>;
 
 export const DAYS = [
   "Lunedì",

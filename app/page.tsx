@@ -433,7 +433,21 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (!session.isPending && session.data) {
-      router.replace("/oggi");
+      (async () => {
+        try {
+          const meRes = await fetch("/api/nutritionist/me");
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (meData.isNutritionist) {
+              router.replace("/nutrizionista");
+              return;
+            }
+          }
+        } catch {
+          // fallback to patient route
+        }
+        router.replace("/oggi");
+      })();
     }
   }, [session.isPending, session.data, router]);
 

@@ -20,6 +20,7 @@ export const diets = pgTable(
     startDate: date("start_date").notNull(),
     endDate: date("end_date").notNull(),
     isActive: boolean("is_active").notNull().default(false),
+    createdBy: text("created_by"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -69,4 +70,31 @@ export const userGoals = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [unique("user_goals_user_id_unique").on(table.userId)]
+);
+
+export const nutritionists = pgTable("nutritionists", {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: text("user_id").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const nutritionistPatients = pgTable(
+  "nutritionist_patients",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    nutritionistId: uuid("nutritionist_id")
+      .notNull()
+      .references(() => nutritionists.id, { onDelete: "cascade" }),
+    patientUserId: text("patient_user_id").notNull(),
+    patientEmail: text("patient_email").notNull(),
+    patientName: text("patient_name"),
+    addedAt: timestamp("added_at").defaultNow().notNull(),
+  },
+  (table) => [
+    unique("nutritionist_patient_unique").on(
+      table.nutritionistId,
+      table.patientUserId
+    ),
+  ]
 );

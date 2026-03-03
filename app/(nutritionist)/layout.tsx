@@ -1,45 +1,28 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
+import { AuthGuard } from "@/components/auth-guard";
 import { cn } from "@/lib/utils";
 
-interface NavItem {
-  href: string;
-  label: string;
-  icon: (active: boolean) => React.ReactNode;
-}
-
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS = [
   {
-    href: "/oggi",
-    label: "Oggi",
+    href: "/nutrizionista",
+    label: "Pazienti",
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <circle cx="12" cy="16" r="1.5" fill={active ? "currentColor" : "none"} />
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
   },
   {
-    href: "/diete",
-    label: "Diete",
-    icon: (active: boolean) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-        <path d="M14 2v6h6" />
-        <line x1="8" y1="13" x2="16" y2="13" />
-        <line x1="8" y1="17" x2="13" y2="17" />
-      </svg>
-    ),
-  },
-  {
-    href: "/impostazioni",
-    label: "Altro",
+    href: "/nutrizionista/impostazioni",
+    label: "Impostazioni",
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.6} strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
@@ -49,7 +32,52 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export function BottomNav() {
+function NutritionistGuard({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    async function check() {
+      try {
+        const res = await fetch("/api/nutritionist/me");
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.isNutritionist) {
+            router.replace("/oggi");
+            return;
+          }
+        } else {
+          router.replace("/oggi");
+          return;
+        }
+      } catch {
+        router.replace("/oggi");
+        return;
+      }
+      setChecked(true);
+    }
+    check();
+  }, [router]);
+
+  if (!checked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="relative">
+          <div className="h-14 w-14 rounded-full border-[3px] border-primary/15" />
+          <motion.div
+            className="absolute inset-0 h-14 w-14 rounded-full border-[3px] border-transparent border-t-primary"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.9, ease: "linear", repeat: Infinity }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+function NutritionistNav() {
   const pathname = usePathname();
 
   return (
@@ -61,7 +89,10 @@ export function BottomNav() {
         className="pointer-events-auto glass-strong flex items-center gap-0.5 rounded-[22px] px-2 py-2"
       >
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isActive =
+            item.href === "/nutrizionista"
+              ? pathname === "/nutrizionista" || (pathname.startsWith("/nutrizionista/") && !pathname.startsWith("/nutrizionista/impostazioni"))
+              : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}
@@ -76,7 +107,7 @@ export function BottomNav() {
             >
               {isActive && (
                 <motion.div
-                  layoutId="nav-pill"
+                  layoutId="nutri-nav-pill"
                   className="absolute inset-0 rounded-2xl"
                   style={{
                     background: "var(--nav-pill)",
@@ -103,5 +134,29 @@ export function BottomNav() {
         })}
       </motion.nav>
     </div>
+  );
+}
+
+export default function NutritionistLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <AuthGuard>
+      <NutritionistGuard>
+        <div className="mx-auto min-h-screen max-w-lg md:max-w-2xl">
+          <main className="px-5 pt-4 pb-28">{children}</main>
+          <div
+            className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 h-28"
+            style={{
+              background:
+                "linear-gradient(to top, var(--background) 30%, transparent 100%)",
+            }}
+          />
+          <NutritionistNav />
+        </div>
+      </NutritionistGuard>
+    </AuthGuard>
   );
 }
