@@ -214,8 +214,8 @@ export async function GET(
       createdBy: diets.createdBy,
       createdAt: diets.createdAt,
       mealCount: sql<number>`count(${meals.id})::int`,
-      creatorName: sql<string | null>`(SELECT name FROM "neon_auth"."user" WHERE id = ${diets.createdBy})`,
-      creatorEmail: sql<string | null>`(SELECT email FROM "neon_auth"."user" WHERE id = ${diets.createdBy})`,
+      creatorName: sql<string | null>`(SELECT name FROM "neon_auth"."user" WHERE id::text = ${diets.createdBy})`,
+      creatorEmail: sql<string | null>`(SELECT email FROM "neon_auth"."user" WHERE id::text = ${diets.createdBy})`,
     })
     .from(diets)
     .leftJoin(meals, eq(meals.dietId, diets.id))

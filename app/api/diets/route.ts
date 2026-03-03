@@ -25,8 +25,8 @@ export async function GET(req: NextRequest) {
       isActive: diets.isActive,
       createdBy: diets.createdBy,
       createdAt: diets.createdAt,
-      creatorName: sql<string | null>`(SELECT name FROM "neon_auth"."user" WHERE id = ${diets.createdBy})`,
-      creatorEmail: sql<string | null>`(SELECT email FROM "neon_auth"."user" WHERE id = ${diets.createdBy})`,
+      creatorName: sql<string | null>`(SELECT name FROM "neon_auth"."user" WHERE id::text = ${diets.createdBy})`,
+      creatorEmail: sql<string | null>`(SELECT email FROM "neon_auth"."user" WHERE id::text = ${diets.createdBy})`,
     })
     .from(diets)
     .where(eq(diets.userId, session.data.user.id))

@@ -16,7 +16,7 @@ export async function GET() {
     .select({
       id: nutritionistPatients.id,
       nutritionistName: nutritionists.displayName,
-      nutritionistEmail: sql<string>`(SELECT email FROM "neon_auth"."user" WHERE id = ${nutritionists.userId})`,
+      nutritionistEmail: sql<string>`(SELECT email FROM "neon_auth"."user" WHERE id::text = ${nutritionists.userId})`,
       confirmed: nutritionistPatients.confirmed,
       addedAt: nutritionistPatients.addedAt,
     })
