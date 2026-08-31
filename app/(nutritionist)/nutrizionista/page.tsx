@@ -1,17 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { UserSearchField } from "@/components/user-search-field";
+import { useUserSearch } from "@/lib/hooks/use-user-search";
 import { useToast } from "@/components/toast";
 import type { NutritionistPatient } from "@/types";
-
-interface SearchResult {
-  id: string;
-  email: string;
-  name: string | null;
-}
 
 const PAGE_SIZE = 15;
 
@@ -28,14 +24,9 @@ export default function NutrizionistaPazientiPage() {
 
   // Add modal
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addQuery, setAddQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<SearchResult | null>(null);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
-  const searchTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const search = useUserSearch("/api/nutritionist/patients/search");
 
   const loadPatients = useCallback(async () => {
     try {
@@ -72,72 +63,21 @@ export default function NutrizionistaPazientiPage() {
     setVisibleCount(PAGE_SIZE);
   }, [filterQuery]);
 
-  // ── Add modal: debounced search ──
-  useEffect(() => {
-    if (selectedUser) return;
-    clearTimeout(searchTimeout.current);
-    if (addQuery.trim().length < 2) {
-      setSearchResults([]);
-      setShowDropdown(false);
-      return;
-    }
-    searchTimeout.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/nutritionist/patients/search?q=${encodeURIComponent(addQuery.trim())}`);
-        if (res.ok) {
-          const data: SearchResult[] = await res.json();
-          setSearchResults(data);
-          setShowDropdown(data.length > 0);
-        }
-      } catch {
-        // ignore
-      }
-    }, 300);
-    return () => clearTimeout(searchTimeout.current);
-  }, [addQuery, selectedUser]);
-
-  // Close dropdown on click outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   function openAddModal() {
     setShowAddModal(true);
-    setAddQuery("");
-    setSelectedUser(null);
-    setSearchResults([]);
+    search.reset();
     setAddError(null);
   }
 
   function closeAddModal() {
     setShowAddModal(false);
-    setSelectedUser(null);
-    setAddQuery("");
-    setSearchResults([]);
+    search.reset();
     setAddError(null);
-  }
-
-  function handleSelectUser(user: SearchResult) {
-    setSelectedUser(user);
-    setAddQuery(user.name ? `${user.name} (${user.email})` : user.email);
-    setShowDropdown(false);
-  }
-
-  function handleClearSelection() {
-    setSelectedUser(null);
-    setAddQuery("");
-    setSearchResults([]);
   }
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedUser) {
+    if (!search.selected) {
       toast("Seleziona un paziente dalla ricerca", "error");
       return;
     }
@@ -149,7 +89,7 @@ export default function NutrizionistaPazientiPage() {
       const res = await fetch("/api/nutritionist/patients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: selectedUser.email }),
+        body: JSON.stringify({ email: search.selected.email }),
       });
 
       if (!res.ok) {
@@ -244,7 +184,8 @@ export default function NutrizionistaPazientiPage() {
             {filterQuery && (
               <button
                 onClick={() => setFilterQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted/60 hover:text-foreground-muted transition-colors"
+                aria-label="Cancella filtro"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-foreground-muted/60 hover:text-foreground-muted transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -433,7 +374,8 @@ export default function NutrizionistaPazientiPage() {
               {/* Close button */}
               <button
                 onClick={closeAddModal}
-                className="absolute top-4 right-4 text-foreground-muted/60 hover:text-foreground transition-colors"
+                aria-label="Chiudi"
+                className="absolute top-2 right-2 p-2.5 text-foreground-muted/60 hover:text-foreground transition-colors"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -449,81 +391,21 @@ export default function NutrizionistaPazientiPage() {
               </p>
 
               <form onSubmit={handleAdd} className="space-y-4">
-                <div ref={dropdownRef} className="relative">
-                  <div className="relative">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-muted/40">
-                      <circle cx="11" cy="11" r="8" />
-                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    </svg>
-                    <input
-                      type="text"
-                      value={addQuery}
-                      onChange={(e) => {
-                        setAddQuery(e.target.value);
-                        if (selectedUser) setSelectedUser(null);
-                      }}
-                      onFocus={() => {
-                        if (searchResults.length > 0 && !selectedUser) setShowDropdown(true);
-                      }}
-                      placeholder="Cerca per nome o email..."
-                      autoFocus
-                      className="w-full rounded-xl glass-input pl-10 pr-10 py-3 text-sm text-foreground placeholder:text-foreground-muted/40 focus:outline-none transition-all"
-                    />
-                    {selectedUser && (
-                      <button
-                        type="button"
-                        onClick={handleClearSelection}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted/60 hover:text-foreground-muted transition-colors"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="18" y1="6" x2="6" y2="18" />
-                          <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Dropdown */}
-                  <AnimatePresence>
-                    {showDropdown && searchResults.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute z-20 left-0 right-0 mt-1.5 rounded-xl shadow-xl overflow-hidden border border-white/20 max-h-48 overflow-y-auto"
-                        style={{ background: "var(--background)" }}
-                      >
-                        {searchResults.map((user) => (
-                          <button
-                            key={user.id}
-                            type="button"
-                            onClick={() => handleSelectUser(user)}
-                            className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-primary/8 transition-colors"
-                          >
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/12 text-xs font-bold text-primary shrink-0">
-                              {(user.name || user.email)[0].toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              {user.name && (
-                                <p className="text-sm font-semibold text-foreground truncate">
-                                  {user.name}
-                                </p>
-                              )}
-                              <p className="text-xs text-foreground-muted truncate">
-                                {user.email}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <UserSearchField
+                  query={search.query}
+                  onQueryChange={search.setQuery}
+                  results={search.results}
+                  showDropdown={search.showDropdown}
+                  onShowDropdownChange={search.setShowDropdown}
+                  selected={search.selected}
+                  onSelect={search.select}
+                  onClearSelection={search.reset}
+                  autoFocus
+                />
 
                 {/* Selected user preview */}
                 <AnimatePresence>
-                  {selectedUser && (
+                  {search.selected && (
                     <motion.div
                       initial={{ opacity: 0, y: -4, height: 0 }}
                       animate={{ opacity: 1, y: 0, height: "auto" }}
@@ -531,14 +413,14 @@ export default function NutrizionistaPazientiPage() {
                       className="glass-subtle rounded-xl p-3.5 flex items-center gap-3"
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/12 text-sm font-bold text-primary shrink-0">
-                        {(selectedUser.name || selectedUser.email)[0].toUpperCase()}
+                        {(search.selected.name || search.selected.email)[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground truncate">
-                          {selectedUser.name || selectedUser.email}
+                          {search.selected.name || search.selected.email}
                         </p>
                         <p className="text-xs text-foreground-muted truncate">
-                          {selectedUser.email}
+                          {search.selected.email}
                         </p>
                       </div>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary shrink-0">
@@ -560,7 +442,7 @@ export default function NutrizionistaPazientiPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={adding || !selectedUser}
+                    disabled={adding || !search.selected}
                     className="flex-1 rounded-xl py-3 text-sm font-semibold text-white transition-all bg-primary hover:bg-primary-light shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20 disabled:bg-white/30 disabled:text-foreground-muted disabled:shadow-none disabled:cursor-not-allowed disabled:backdrop-blur-sm"
                   >
                     {adding ? "Aggiunta..." : "Aggiungi"}

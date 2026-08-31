@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { diets } from "@/lib/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { createDietWithMeals } from "@/lib/db/create-diet";
+import { authUserNameSql, authUserEmailSql } from "@/lib/db/auth-users";
 import type { ParsedMeal } from "@/types";
 
 export async function GET(req: NextRequest) {
@@ -25,8 +26,8 @@ export async function GET(req: NextRequest) {
       isActive: diets.isActive,
       createdBy: diets.createdBy,
       createdAt: diets.createdAt,
-      creatorName: sql<string | null>`(SELECT name FROM "neon_auth"."user" WHERE id::text = ${diets.createdBy})`,
-      creatorEmail: sql<string | null>`(SELECT email FROM "neon_auth"."user" WHERE id::text = ${diets.createdBy})`,
+      creatorName: authUserNameSql(diets.createdBy),
+      creatorEmail: authUserEmailSql(diets.createdBy),
     })
     .from(diets)
     .where(eq(diets.userId, session.data.user.id))

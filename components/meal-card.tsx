@@ -11,6 +11,7 @@ interface MealCardProps {
   index: number;
   onEstimateMacros?: (mealId: string) => void;
   onToggleComplete?: (mealId: string) => void;
+  readOnly?: boolean;
 }
 
 export function MealCard({
@@ -19,6 +20,7 @@ export function MealCard({
   index,
   onEstimateMacros,
   onToggleComplete,
+  readOnly = false,
 }: MealCardProps) {
   const emoji = MEAL_EMOJI[meal.mealType as MealType] || "\uD83C\uDF7D\uFE0F";
   const hasMacros =
@@ -46,11 +48,12 @@ export function MealCard({
         {/* Completion checkbox */}
         <button
           type="button"
+          disabled={readOnly}
           onClick={(e) => {
             e.stopPropagation();
             onToggleComplete?.(meal.id);
           }}
-          className="mt-0.5 shrink-0"
+          className={cn("mt-0.5 shrink-0", readOnly && "cursor-default")}
           aria-label={completed ? "Segna come non completato" : "Segna come completato"}
         >
           <motion.div
@@ -151,7 +154,7 @@ export function MealCard({
             </div>
           )}
 
-          {missingMacros && onEstimateMacros && !completed && (
+          {missingMacros && onEstimateMacros && !completed && !readOnly && (
             <motion.button
               onClick={() => onEstimateMacros(meal.id)}
               whileHover={{ scale: 1.02 }}

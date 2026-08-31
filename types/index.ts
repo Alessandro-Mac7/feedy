@@ -4,6 +4,7 @@ import type {
   meals,
   nutritionists,
   nutritionistPatients,
+  familyShares,
 } from "@/lib/db/schema";
 
 export type Diet = InferSelectModel<typeof diets>;
@@ -12,6 +13,7 @@ export type Nutritionist = InferSelectModel<typeof nutritionists>;
 export type NutritionistPatient = InferSelectModel<
   typeof nutritionistPatients
 >;
+export type FamilyShare = InferSelectModel<typeof familyShares>;
 
 export const DAYS = [
   "Lunedì",

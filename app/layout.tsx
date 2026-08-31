@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, DM_Serif_Display } from "next/font/google";
+import { MotionConfig } from "motion/react";
 import { AuthProvider } from "@/components/auth-provider";
 import { CookieBanner } from "@/components/cookie-banner";
 import "./globals.css";
@@ -51,10 +52,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`${dmSans.variable} ${dmSerif.variable} antialiased`}>
-        <AuthProvider>
-          {children}
-          <CookieBanner />
-        </AuthProvider>
+        <MotionConfig reducedMotion="user">
+          <AuthProvider>
+            {children}
+            <CookieBanner />
+          </AuthProvider>
+        </MotionConfig>
       </body>
     </html>
   );

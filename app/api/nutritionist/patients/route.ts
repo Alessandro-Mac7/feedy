@@ -4,6 +4,7 @@ import { verifyNutritionist } from "@/lib/auth/nutritionist";
 import { db } from "@/lib/db";
 import { nutritionistPatients } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { findUserByEmail } from "@/lib/db/auth-users";
 
 export async function GET() {
   const session = await auth.getSession();
@@ -38,20 +39,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Resolve email → userId + name via Neon Auth user table
-  const userRows = await db.execute(
-    sql`SELECT id, name FROM "neon_auth"."user" WHERE email = ${email.trim().toLowerCase()}`
-  );
-
-  if (!userRows.rows.length) {
+  const user = await findUserByEmail(email);
+  if (!user) {
     return NextResponse.json(
       { error: "Nessun utente trovato con questa email." },
       { status: 404 }
     );
   }
 
-  const patientUserId = userRows.rows[0].id as string;
-  const patientName = (userRows.rows[0].name as string) || name?.trim() || null;
+  const patientUserId = user.id;
+  const patientName = user.name || name?.trim() || null;
 
   // Check if already added
   const existing = await db
@@ -74,7 +71,7 @@ export async function POST(req: NextRequest) {
     .values({
       nutritionistId: nutritionist.id,
       patientUserId,
-      patientEmail: email.trim().toLowerCase(),
+      patientEmail: user.email,
       patientName,
     })
     .returning();

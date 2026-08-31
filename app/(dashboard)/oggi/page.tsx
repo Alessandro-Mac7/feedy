@@ -8,7 +8,7 @@ import { DailySummaryCard } from "@/components/daily-summary-card";
 import { MacroDonutCard } from "@/components/macro-donut-card";
 import { WaterTrackerCard } from "@/components/water-tracker-card";
 import { SkeletonMealCard } from "@/components/skeleton-meal-card";
-import { getTodayDay, getCurrentMealType } from "@/lib/utils";
+import { cn, getTodayDay, getCurrentMealType } from "@/lib/utils";
 import { MEAL_TYPES, type Day, type Meal, type Diet, type MealType } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,6 +27,12 @@ interface DietWithMeals extends Diet {
   meals: Meal[];
 }
 
+interface FamilyOwner {
+  ownerUserId: string;
+  ownerName: string | null;
+  ownerEmail: string | null;
+}
+
 export default function OggiPage() {
   const [selectedDay, setSelectedDay] = useState<Day>(getTodayDay());
   const [diet, setDiet] = useState<DietWithMeals | null>(null);
@@ -37,10 +43,26 @@ export default function OggiPage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
   const [showShoppingList, setShowShoppingList] = useState(false);
+  const [familyOwners, setFamilyOwners] = useState<FamilyOwner[]>([]);
+  const [viewingOwnerId, setViewingOwnerId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const loadActiveDiet = useCallback(async () => {
+  const readOnly = viewingOwnerId !== null;
+  const viewingOwner = familyOwners.find((o) => o.ownerUserId === viewingOwnerId);
+
+  const loadDiet = useCallback(async (ownerId: string | null) => {
     try {
+      if (ownerId) {
+        const res = await fetch(`/api/family/${ownerId}/diet`);
+        if (!res.ok) {
+          setDiet(null);
+          return;
+        }
+        const data: { diet: Diet | null; meals: Meal[] } = await res.json();
+        setDiet(data.diet ? { ...data.diet, meals: data.meals } : null);
+        return;
+      }
+
       const res = await fetch("/api/diets");
       if (!res.ok) return;
 
@@ -61,12 +83,30 @@ export default function OggiPage() {
   }, []);
 
   useEffect(() => {
-    loadActiveDiet();
+    setLoading(true);
+    loadDiet(viewingOwnerId);
+  }, [viewingOwnerId, loadDiet]);
+
+  useEffect(() => {
     fetch("/api/goals")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data) setGoals(data); })
       .catch(() => {});
-  }, [loadActiveDiet]);
+    fetch("/api/family/shared-with-me")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: (FamilyOwner & { confirmed: boolean })[]) =>
+        setFamilyOwners(data.filter((d) => d.confirmed))
+      )
+      .catch(() => {});
+  }, []);
+
+  function handleSwitchOwner(ownerId: string | null) {
+    if (ownerId === viewingOwnerId) return;
+    setViewingOwnerId(ownerId);
+    setShowShoppingList(false);
+    setPendingMealId(null);
+    setEstimating(null);
+  }
 
   function handleEstimateMacros(mealId: string) {
     if (localStorage.getItem("ai-consent-accepted")) {
@@ -128,7 +168,7 @@ export default function OggiPage() {
       });
       if (res.ok) {
         toast("Macro stimati con AI", "success");
-        loadActiveDiet();
+        loadDiet(viewingOwnerId);
       } else {
         toast("Errore nella stima dei macro", "error");
       }
@@ -160,6 +200,37 @@ export default function OggiPage() {
     ? new Date() > new Date(diet.endDate + "T23:59:59")
     : false;
 
+  const familySwitcher = familyOwners.length > 0 && (
+    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide justify-center px-1">
+      {[{ id: null, label: "Io" }, ...familyOwners.map((o) => ({
+        id: o.ownerUserId,
+        label: (o.ownerName || o.ownerEmail || "?").split(" ")[0],
+      }))].map((opt) => {
+        const isActive = viewingOwnerId === opt.id;
+        return (
+          <button
+            key={opt.id ?? "me"}
+            type="button"
+            onClick={() => handleSwitchOwner(opt.id)}
+            className={cn(
+              "relative shrink-0 rounded-xl px-4 py-2 text-xs font-semibold transition-colors min-h-[36px]",
+              isActive ? "text-white" : "text-foreground-muted glass-subtle hover:bg-white/50"
+            )}
+          >
+            {isActive && (
+              <motion.div
+                layoutId="family-switcher-pill"
+                className="absolute inset-0 rounded-xl bg-primary shadow-md shadow-primary/20"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
+              />
+            )}
+            <span className="relative z-10">{opt.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="space-y-5">
@@ -179,28 +250,35 @@ export default function OggiPage() {
 
   if (!diet) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col items-center justify-center py-20 text-center"
-      >
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl glass text-foreground-muted">
-          <EmptyPlate />
-        </div>
-        <h2 className="font-display text-2xl text-foreground mb-2">
-          Nessuna dieta attiva
-        </h2>
-        <p className="text-foreground-muted mb-8 max-w-[280px] leading-relaxed">
-          Carica un piano pasti e attivalo per vedere i tuoi pasti di oggi.
-        </p>
-        <Link
-          href="/diete"
-          className="rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary-light transition-all hover:shadow-lg hover:shadow-primary/25"
+      <div className="space-y-5">
+        {familySwitcher}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center justify-center py-20 text-center"
         >
-          Vai alle Diete
-        </Link>
-      </motion.div>
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl glass text-foreground-muted">
+            <EmptyPlate />
+          </div>
+          <h2 className="font-display text-2xl text-foreground mb-2">
+            Nessuna dieta attiva
+          </h2>
+          <p className="text-foreground-muted mb-8 max-w-[280px] leading-relaxed">
+            {readOnly
+              ? `${viewingOwner?.ownerName || viewingOwner?.ownerEmail || "Questa persona"} non ha ancora una dieta attiva.`
+              : "Carica un piano pasti e attivalo per vedere i tuoi pasti di oggi."}
+          </p>
+          {!readOnly && (
+            <Link
+              href="/diete"
+              className="rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary-light transition-all hover:shadow-lg hover:shadow-primary/25"
+            >
+              Vai alle Diete
+            </Link>
+          )}
+        </motion.div>
+      </div>
     );
   }
 
@@ -237,6 +315,8 @@ export default function OggiPage() {
           </span>
         )}
       </motion.div>
+
+      {familySwitcher}
 
       {/* View mode toggle */}
       <div className="flex gap-1 p-1 rounded-xl glass-subtle self-center mx-auto w-fit">
@@ -282,9 +362,11 @@ export default function OggiPage() {
                 dietName={diet.dietName}
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className={cn("grid gap-3", readOnly ? "grid-cols-1" : "grid-cols-2")}>
                 <MacroDonutCard meals={dayMeals} goals={goals ?? undefined} />
-                <WaterTrackerCard dayLabel={selectedDay} goalGlasses={goals?.dailyWater} onGoalReached={handleWaterGoalReached} />
+                {!readOnly && (
+                  <WaterTrackerCard dayLabel={selectedDay} goalGlasses={goals?.dailyWater} onGoalReached={handleWaterGoalReached} />
+                )}
               </div>
 
               {dayMeals.length === 0 ? (
@@ -304,10 +386,11 @@ export default function OggiPage() {
                         meal={meal}
                         index={i}
                         isHighlighted={isToday && meal.mealType === currentMealType}
+                        readOnly={readOnly}
                         onEstimateMacros={
-                          estimating === meal.id ? undefined : handleEstimateMacros
+                          readOnly || estimating === meal.id ? undefined : handleEstimateMacros
                         }
-                        onToggleComplete={handleToggleComplete}
+                        onToggleComplete={readOnly ? undefined : handleToggleComplete}
                       />
                     ))}
                   </div>
@@ -327,7 +410,8 @@ export default function OggiPage() {
           <WeeklyStatsCard meals={diet.meals} />
           <WeeklyBarChart meals={diet.meals} goalKcal={goals?.dailyKcal} />
 
-          {/* Shopping list button */}
+          {/* Shopping list button — generates a list from your own diet only */}
+          {!readOnly && (
           <motion.button
             type="button"
             onClick={() => setShowShoppingList(true)}
@@ -351,6 +435,7 @@ export default function OggiPage() {
               AI
             </span>
           </motion.button>
+          )}
         </motion.div>
       )}
 

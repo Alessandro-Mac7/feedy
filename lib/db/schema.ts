@@ -99,3 +99,36 @@ export const nutritionistPatients = pgTable(
     ),
   ]
 );
+
+export const familyShares = pgTable(
+  "family_shares",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    ownerUserId: text("owner_user_id").notNull(),
+    memberUserId: text("member_user_id").notNull(),
+    memberEmail: text("member_email").notNull(),
+    memberName: text("member_name"),
+    confirmed: boolean().notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    unique("family_share_unique").on(table.ownerUserId, table.memberUserId),
+  ]
+);
+
+// Short-lived, single-use code generated in-app and spoken to Alexa once to
+// link an Amazon account to a Feedy account (no OAuth server required).
+export const alexaLinkCodes = pgTable("alexa_link_codes", {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: text("user_id").notNull(),
+  code: text().notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const alexaLinks = pgTable("alexa_links", {
+  id: uuid().primaryKey().defaultRandom(),
+  alexaUserId: text("alexa_user_id").notNull().unique(),
+  userId: text("user_id").notNull(),
+  linkedAt: timestamp("linked_at").defaultNow().notNull(),
+});

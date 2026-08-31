@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { nutritionistPatients, nutritionists } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { authUserEmailSql } from "@/lib/db/auth-users";
 
 export async function GET() {
   const session = await auth.getSession();
@@ -16,7 +17,7 @@ export async function GET() {
     .select({
       id: nutritionistPatients.id,
       nutritionistName: nutritionists.displayName,
-      nutritionistEmail: sql<string>`(SELECT email FROM "neon_auth"."user" WHERE id::text = ${nutritionists.userId})`,
+      nutritionistEmail: authUserEmailSql(nutritionists.userId),
       confirmed: nutritionistPatients.confirmed,
       addedAt: nutritionistPatients.addedAt,
     })

@@ -6,13 +6,15 @@ import { authClient } from "@/lib/auth/client";
 import { useToast } from "@/components/toast";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AssociationRow } from "@/components/association-row";
+import { FamilyShareManager } from "@/components/family-share-manager";
+import { usePendingRequests } from "@/lib/hooks/use-pending-requests";
 
 interface NutritionistAssociation {
   id: string;
   nutritionistName: string;
   nutritionistEmail: string;
   confirmed: boolean;
-  addedAt: string;
 }
 
 interface Goals {
@@ -39,49 +41,26 @@ export default function ImpostazioniPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [goals, setGoals] = useState<Goals>(DEFAULT_GOALS);
   const [savingGoals, setSavingGoals] = useState(false);
-  const [nutritionists, setNutritionists] = useState<NutritionistAssociation[]>([]);
-  const [nutLoading, setNutLoading] = useState(true);
-  const [nutResponding, setNutResponding] = useState<string | null>(null);
   const [nutRemoveTarget, setNutRemoveTarget] = useState<NutritionistAssociation | null>(null);
   const { toast } = useToast();
 
-  const loadNutritionists = useCallback(async () => {
-    try {
-      const res = await fetch("/api/patient/nutritionist");
-      if (res.ok) {
-        const data: NutritionistAssociation[] = await res.json();
-        setNutritionists(data);
-      }
-    } catch { /* ignore */ } finally {
-      setNutLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadNutritionists();
-  }, [loadNutritionists]);
+  const {
+    items: nutritionists,
+    loading: nutLoading,
+    respond: respondNutritionist,
+    respondingId: nutResponding,
+  } = usePendingRequests<NutritionistAssociation>("/api/patient/nutritionist");
 
   async function handleNutResponse(id: string, action: "confirm" | "reject") {
-    setNutResponding(id);
-    try {
-      const res = await fetch(
-        `/api/patient/nutritionist?id=${id}&action=${action}`,
-        { method: "PATCH" }
+    const ok = await respondNutritionist(id, action);
+    if (ok) {
+      toast(
+        action === "confirm" ? "Nutrizionista confermato!" : "Richiesta rifiutata.",
+        action === "confirm" ? "success" : "info"
       );
-      if (res.ok) {
-        toast(
-          action === "confirm" ? "Nutrizionista confermato!" : "Richiesta rifiutata.",
-          action === "confirm" ? "success" : "info"
-        );
-        loadNutritionists();
-        setNutRemoveTarget(null);
-      } else {
-        toast("Errore nella risposta.", "error");
-      }
-    } catch {
-      toast("Errore di connessione.", "error");
-    } finally {
-      setNutResponding(null);
+      setNutRemoveTarget(null);
+    } else {
+      toast("Errore nella risposta.", "error");
     }
   }
 
@@ -246,62 +225,22 @@ export default function ImpostazioniPage() {
           <div className="space-y-3">
             <AnimatePresence mode="popLayout">
               {nutritionists.map((nut) => (
-                <motion.div
+                <AssociationRow
                   key={nut.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex items-center gap-3"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/12 text-sm font-bold text-primary shrink-0">
-                    {nut.nutritionistName[0].toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-foreground truncate">
-                        {nut.nutritionistName}
-                      </p>
-                      {!nut.confirmed && (
-                        <span className="shrink-0 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent uppercase tracking-wider">
-                          In attesa
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-foreground-muted truncate">
-                      {nut.nutritionistEmail}
-                    </p>
-                  </div>
-                  {nut.confirmed ? (
-                    <button
-                      onClick={() => setNutRemoveTarget(nut)}
-                      className="shrink-0 rounded-xl bg-danger/8 px-3 py-1.5 text-[11px] font-semibold text-danger hover:bg-danger/15 transition-colors"
-                    >
-                      Rimuovi
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        onClick={() => handleNutResponse(nut.id, "confirm")}
-                        disabled={nutResponding === nut.id}
-                        className="rounded-xl bg-primary px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-primary-light transition-colors disabled:opacity-60"
-                      >
-                        Accetta
-                      </button>
-                      <button
-                        onClick={() => handleNutResponse(nut.id, "reject")}
-                        disabled={nutResponding === nut.id}
-                        className="rounded-xl glass px-3 py-1.5 text-[11px] font-semibold text-danger hover:bg-danger/8 transition-colors disabled:opacity-60"
-                      >
-                        Rifiuta
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
+                  title={nut.nutritionistName}
+                  subtitle={nut.nutritionistEmail}
+                  pending={!nut.confirmed}
+                  loading={nutResponding === nut.id}
+                  onConfirm={!nut.confirmed ? () => handleNutResponse(nut.id, "confirm") : undefined}
+                  onReject={() => (nut.confirmed ? setNutRemoveTarget(nut) : handleNutResponse(nut.id, "reject"))}
+                />
               ))}
             </AnimatePresence>
           </div>
         )}
       </motion.div>
+
+      <FamilyShareManager />
 
       {/* Theme */}
       <motion.div

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { nutritionistPatients, diets, meals } from "@/lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { createDietWithMeals } from "@/lib/db/create-diet";
+import { authUserNameSql, authUserEmailSql } from "@/lib/db/auth-users";
 import type { ParsedMeal } from "@/types";
 
 export async function DELETE(
@@ -214,8 +215,8 @@ export async function GET(
       createdBy: diets.createdBy,
       createdAt: diets.createdAt,
       mealCount: sql<number>`count(${meals.id})::int`,
-      creatorName: sql<string | null>`(SELECT name FROM "neon_auth"."user" WHERE id::text = ${diets.createdBy})`,
-      creatorEmail: sql<string | null>`(SELECT email FROM "neon_auth"."user" WHERE id::text = ${diets.createdBy})`,
+      creatorName: authUserNameSql(diets.createdBy),
+      creatorEmail: authUserEmailSql(diets.createdBy),
     })
     .from(diets)
     .leftJoin(meals, eq(meals.dietId, diets.id))
