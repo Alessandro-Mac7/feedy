@@ -298,7 +298,7 @@ export default function OggiPage() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-center pt-2 md:pt-4 pb-3"
+        className="relative flex items-center justify-center pt-2 md:pt-4 pb-3"
       >
         <Image
           src="/logo.png"
