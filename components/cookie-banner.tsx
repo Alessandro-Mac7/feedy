@@ -1,23 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 
 const STORAGE_KEY = "cookie-consent-accepted";
 
-export function CookieBanner() {
-  const [visible, setVisible] = useState(false);
+function subscribe() {
+  return () => {};
+}
 
-  useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      setVisible(true);
-    }
-  }, []);
+function getSnapshot() {
+  return !localStorage.getItem(STORAGE_KEY);
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
+export function CookieBanner() {
+  // Renders hidden during SSR/hydration (deterministic), then shows right
+  // after mount if consent hasn't been recorded yet — no effect needed
+  // just to read localStorage once.
+  const shouldShow = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [dismissed, setDismissed] = useState(false);
+  const visible = shouldShow && !dismissed;
 
   function handleAccept() {
     localStorage.setItem(STORAGE_KEY, "true");
-    setVisible(false);
+    setDismissed(true);
   }
 
   return (

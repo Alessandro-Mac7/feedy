@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
 const GLASSES = 8;
 const ML_PER_GLASS = 250;
-const TARGET_ML = GLASSES * ML_PER_GLASS;
+const WATER_EVENT = "feedy-water-change";
 
 function getStorageKey(day: string): string {
   const now = new Date();
@@ -15,48 +15,86 @@ function getStorageKey(day: string): string {
   return `water-${weekKey}-${day}`;
 }
 
+function readCount(storageKey: string, totalGlasses: number): number {
+  const saved = localStorage.getItem(storageKey);
+  if (saved === null) return 0;
+  const val = parseInt(saved, 10);
+  return !isNaN(val) && val >= 0 && val <= totalGlasses ? val : 0;
+}
+
+function writeCount(storageKey: string, value: number) {
+  localStorage.setItem(storageKey, String(value));
+  window.dispatchEvent(new Event(WATER_EVENT));
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener(WATER_EVENT, callback);
+  return () => window.removeEventListener(WATER_EVENT, callback);
+}
+
 interface WaterTrackerCardProps {
   dayLabel: string;
   goalGlasses?: number;
   onGoalReached?: () => void;
 }
 
+interface Splash {
+  id: number;
+  width: number;
+  height: number;
+  left: number;
+  dx: number;
+  dy: number;
+}
+
+// Glass width used by the splash's horizontal spread, mirrors the `gW`
+// geometry constant below (fixed, not derived from props/state).
+const SPLASH_GLASS_WIDTH = 64;
+
+function randomSplashes(): Splash[] {
+  return Array.from({ length: 5 }, (_, i) => ({
+    id: Date.now() + i,
+    width: 4 + Math.random() * 3,
+    height: 4 + Math.random() * 3,
+    left: 10 + Math.random() * (SPLASH_GLASS_WIDTH - 20),
+    dy: -(15 + Math.random() * 25),
+    dx: (Math.random() - 0.5) * 20,
+  }));
+}
+
 export function WaterTrackerCard({ dayLabel, goalGlasses, onGoalReached }: WaterTrackerCardProps) {
   const totalGlasses = goalGlasses ?? GLASSES;
-  const [filled, setFilled] = useState(0);
-  const [animDir, setAnimDir] = useState<"up" | "down" | null>(null);
   const storageKey = getStorageKey(dayLabel);
 
-  useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved !== null) {
-      const val = parseInt(saved, 10);
-      if (!isNaN(val) && val >= 0 && val <= totalGlasses) {
-        setFilled(val);
-      }
-    } else {
-      setFilled(0);
-    }
-  }, [storageKey]);
+  // localStorage is the single source of truth; this re-reads it whenever
+  // storageKey (the day) changes or a write happens, with an SSR-safe
+  // default of 0 for the very first (server) render.
+  const filled = useSyncExternalStore(
+    subscribe,
+    () => readCount(storageKey, totalGlasses),
+    () => 0
+  );
+  const [animDir, setAnimDir] = useState<"up" | "down" | null>(null);
+  const [splashes, setSplashes] = useState<Splash[]>([]);
 
   const handleAdd = useCallback(() => {
     if (filled >= totalGlasses) return;
     setAnimDir("up");
-    const next = filled + 1;
-    setFilled(next);
-    localStorage.setItem(storageKey, String(next));
-    if (next >= totalGlasses) onGoalReached?.();
-    setTimeout(() => setAnimDir(null), 600);
+    setSplashes(randomSplashes());
+    writeCount(storageKey, filled + 1);
+    if (filled + 1 >= totalGlasses) onGoalReached?.();
+    setTimeout(() => {
+      setAnimDir(null);
+      setSplashes([]);
+    }, 600);
   }, [filled, storageKey, totalGlasses, onGoalReached]);
 
   const handleRemove = useCallback(() => {
     if (filled <= 0) return;
     setAnimDir("down");
-    const next = filled - 1;
-    setFilled(next);
-    localStorage.setItem(storageKey, String(next));
+    writeCount(storageKey, filled - 1);
     setTimeout(() => setAnimDir(null), 600);
-  }, [filled, storageKey, totalGlasses]);
+  }, [filled, storageKey]);
 
   const targetMl = totalGlasses * ML_PER_GLASS;
   const ml = filled * ML_PER_GLASS;
@@ -245,31 +283,18 @@ export function WaterTrackerCard({ dayLabel, goalGlasses, onGoalReached }: Water
 
           {/* Splash effect on add */}
           <AnimatePresence>
-            {animDir === "up" && (
-              <>
-                {[...Array(5)].map((_, i) => (
-                  <motion.div
-                    key={`splash-${i}`}
-                    className="absolute rounded-full bg-[#4A9BD9]"
-                    style={{
-                      width: 4 + Math.random() * 3,
-                      height: 4 + Math.random() * 3,
-                      left: 10 + Math.random() * (gW - 20),
-                      top: "40%",
-                    }}
-                    initial={{ y: 0, opacity: 0.7, scale: 1 }}
-                    animate={{
-                      y: -(15 + Math.random() * 25),
-                      x: (Math.random() - 0.5) * 20,
-                      opacity: 0,
-                      scale: 0.3,
-                    }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  />
-                ))}
-              </>
-            )}
+            {animDir === "up" &&
+              splashes.map((s) => (
+                <motion.div
+                  key={s.id}
+                  className="absolute rounded-full bg-[#4A9BD9]"
+                  style={{ width: s.width, height: s.height, left: s.left, top: "40%" }}
+                  initial={{ y: 0, opacity: 0.7, scale: 1 }}
+                  animate={{ y: s.dy, x: s.dx, opacity: 0, scale: 0.3 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              ))}
           </AnimatePresence>
         </div>
 

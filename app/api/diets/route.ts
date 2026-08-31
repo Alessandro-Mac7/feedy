@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { diets } from "@/lib/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { createDietWithMeals } from "@/lib/db/create-diet";
 import { authUserNameSql, authUserEmailSql } from "@/lib/db/auth-users";
 import type { ParsedMeal } from "@/types";

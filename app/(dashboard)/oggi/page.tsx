@@ -40,7 +40,7 @@ export default function OggiPage() {
   const [estimating, setEstimating] = useState<string | null>(null);
   const [pendingMealId, setPendingMealId] = useState<string | null>(null);
   const [goals, setGoals] = useState<{ dailyKcal?: number; dailyCarbs?: number; dailyFats?: number; dailyProteins?: number; dailyWater?: number } | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiTrigger, setConfettiTrigger] = useState(0);
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
   const [showShoppingList, setShowShoppingList] = useState(false);
   const [familyOwners, setFamilyOwners] = useState<FamilyOwner[]>([]);
@@ -138,8 +138,7 @@ export default function OggiPage() {
     // Check if all day meals are now completed
     const updatedDayMeals = updatedMeals.filter((m) => m.day === selectedDay);
     if (updatedDayMeals.length > 0 && updatedDayMeals.every((m) => m.isCompleted)) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 100);
+      setConfettiTrigger((n) => n + 1);
     }
     try {
       const res = await fetch(`/api/meals/${mealId}/complete`, { method: "POST" });
@@ -154,8 +153,7 @@ export default function OggiPage() {
   }
 
   function handleWaterGoalReached() {
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 100);
+    setConfettiTrigger((n) => n + 1);
   }
 
   async function doEstimate(mealId: string) {
@@ -284,7 +282,7 @@ export default function OggiPage() {
 
   return (
     <div className="space-y-5">
-      <Confetti trigger={showConfetti} />
+      <Confetti trigger={confettiTrigger} />
       <ShoppingList open={showShoppingList} onClose={() => setShowShoppingList(false)} />
       <AiConsentDialog
         open={pendingMealId !== null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { EmptyDiets } from "@/components/illustrations/empty-diets";
 import { EmptyDay } from "@/components/illustrations/empty-day";
@@ -26,16 +26,25 @@ const SLIDES = [
   },
 ];
 
+function subscribe() {
+  return () => {};
+}
+
+function getSnapshot() {
+  return !localStorage.getItem(STORAGE_KEY);
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
 export function Onboarding() {
-  const [show, setShow] = useState(false);
+  // Renders hidden during SSR/hydration (deterministic), then shows right
+  // after mount if onboarding hasn't been completed yet.
+  const shouldShow = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [dismissed, setDismissed] = useState(false);
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
-
-  useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      setShow(true);
-    }
-  }, []);
 
   const handleNext = useCallback(() => {
     if (current < SLIDES.length - 1) {
@@ -46,7 +55,7 @@ export function Onboarding() {
 
   const handleDone = useCallback(() => {
     localStorage.setItem(STORAGE_KEY, "true");
-    setShow(false);
+    setDismissed(true);
   }, []);
 
   const handleSwipe = useCallback(
@@ -62,7 +71,7 @@ export function Onboarding() {
     [current]
   );
 
-  if (!show) return null;
+  if (!shouldShow || dismissed) return null;
 
   const isLast = current === SLIDES.length - 1;
   const slide = SLIDES[current];

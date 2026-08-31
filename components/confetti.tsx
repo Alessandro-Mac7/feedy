@@ -30,22 +30,21 @@ function generateParticles(): Particle[] {
   }));
 }
 
-export function Confetti({ trigger }: { trigger: boolean }) {
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const [show, setShow] = useState(false);
+// One burst: particles are randomized once per mount (lazy initializer, not
+// during an effect), and the auto-hide timer only ever calls setState from
+// its own callback.
+function ConfettiBurst() {
+  const [particles] = useState(generateParticles);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    if (trigger) {
-      setParticles(generateParticles());
-      setShow(true);
-      const timer = setTimeout(() => setShow(false), 2200);
-      return () => clearTimeout(timer);
-    }
-  }, [trigger]);
+    const timer = setTimeout(() => setVisible(false), 2200);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <AnimatePresence>
-      {show && (
+      {visible && (
         <div className="pointer-events-none fixed inset-0 z-[100] overflow-hidden">
           {particles.map((p) => (
             <motion.div
@@ -74,4 +73,12 @@ export function Confetti({ trigger }: { trigger: boolean }) {
       )}
     </AnimatePresence>
   );
+}
+
+// `trigger` is a counter that increments on each celebration; remounting a
+// fresh ConfettiBurst per value gives each burst its own randomized
+// particles without needing an effect to regenerate them.
+export function Confetti({ trigger }: { trigger: number }) {
+  if (trigger === 0) return null;
+  return <ConfettiBurst key={trigger} />;
 }

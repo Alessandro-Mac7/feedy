@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark" | "system";
 
 const STORAGE_KEY = "feedy-theme";
+const THEME_EVENT = "feedy-theme-change";
 
 function getSystemTheme(): "light" | "dark" {
   if (typeof window === "undefined") return "light";
@@ -19,17 +20,29 @@ function applyTheme(theme: Theme) {
   document.documentElement.classList.add(resolved);
 }
 
+function readStoredTheme(): Theme {
+  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+  return stored && ["light", "dark", "system"].includes(stored) ? stored : "system";
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener(THEME_EVENT, callback);
+  return () => window.removeEventListener(THEME_EVENT, callback);
+}
+
+function getServerSnapshot(): Theme {
+  return "system";
+}
+
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("system");
+  // Renders "system" during SSR/hydration (deterministic, matches the
+  // server), then picks up the real stored value right after mount —
+  // no hydration mismatch, and no effect needed just to read localStorage.
+  const theme = useSyncExternalStore(subscribe, readStoredTheme, getServerSnapshot);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const initial = stored && ["light", "dark", "system"].includes(stored)
-      ? stored
-      : "system";
-    setThemeState(initial);
-    applyTheme(initial);
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     if (theme !== "system") return;
@@ -40,9 +53,9 @@ export function useTheme() {
   }, [theme]);
 
   const setTheme = useCallback((next: Theme) => {
-    setThemeState(next);
     localStorage.setItem(STORAGE_KEY, next);
     applyTheme(next);
+    window.dispatchEvent(new Event(THEME_EVENT));
   }, []);
 
   return { theme, setTheme } as const;
