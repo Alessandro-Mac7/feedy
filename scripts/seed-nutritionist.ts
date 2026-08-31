@@ -5,7 +5,7 @@
  *   npx tsx scripts/seed-nutritionist.ts <email> <nome-visualizzato>
  *
  * Esempio:
- *   npx tsx scripts/seed-nutritionist.ts nutrizionista@demo.com "Dr.ssa Bianchi"
+ *   npx tsx scripts/seed-nutritionist.ts nutrizionista@demo.com "Dott.ssa Anna Maria Gaetano"
  *
  * Prerequisiti:
  *   - L'utente deve essersi già registrato tramite la UI (/auth/sign-up)
@@ -26,7 +26,7 @@ const displayName = process.argv[3];
 if (!email || !displayName) {
   console.error(
     "\nUso: npx tsx scripts/seed-nutritionist.ts <email> <nome>\n" +
-      'Esempio: npx tsx scripts/seed-nutritionist.ts nutrizionista@demo.com "Dr.ssa Bianchi"\n'
+      'Esempio: npx tsx scripts/seed-nutritionist.ts nutrizionista@demo.com "Dott.ssa Anna Maria Gaetano"\n'
   );
   process.exit(1);
 }
