@@ -17,11 +17,15 @@ const DAY_SHORT: Record<Day, string> = {
   Domenica: "Dom",
 };
 
-export function getTodayDay(): Day {
-  const jsDay = new Date().getDay(); // 0=Sun, 1=Mon, ...
+export function dayFromDate(date: Date): Day {
+  const jsDay = date.getDay(); // 0=Sun, 1=Mon, ...
   // Map JS day (0=Sun) to our Italian days (0=Mon)
   const index = jsDay === 0 ? 6 : jsDay - 1;
   return DAYS[index];
+}
+
+export function getTodayDay(): Day {
+  return dayFromDate(new Date());
 }
 
 export function getDayShort(day: Day): string {

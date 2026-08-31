@@ -8,6 +8,7 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AssociationRow } from "@/components/association-row";
 import { FamilyShareManager } from "@/components/family-share-manager";
+import { AlexaLinkCard } from "@/components/alexa-link-card";
 import { usePendingRequests } from "@/lib/hooks/use-pending-requests";
 
 interface NutritionistAssociation {
@@ -241,6 +242,8 @@ export default function ImpostazioniPage() {
       </motion.div>
 
       <FamilyShareManager />
+
+      <AlexaLinkCard />
 
       {/* Theme */}
       <motion.div

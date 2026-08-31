@@ -1,0 +1,116 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "feedy",
+      "intents": [
+        { "name": "AMAZON.CancelIntent", "samples": [] },
+        { "name": "AMAZON.StopIntent", "samples": [] },
+        { "name": "AMAZON.HelpIntent", "samples": [] },
+        { "name": "AMAZON.FallbackIntent", "samples": [] },
+        { "name": "AMAZON.NavigateHomeIntent", "samples": [] },
+        {
+          "name": "LinkAccountIntent",
+          "slots": [{ "name": "Code", "type": "AMAZON.NUMBER" }],
+          "samples": [
+            "collega il mio account con il codice {Code}",
+            "collega l'account con il codice {Code}",
+            "il mio codice è {Code}",
+            "collegati con il codice {Code}",
+            "collega account {Code}"
+          ]
+        },
+        {
+          "name": "GetCurrentMealIntent",
+          "slots": [],
+          "samples": [
+            "cosa devo mangiare ora",
+            "cosa mangio ora",
+            "cosa mangio adesso",
+            "cosa mi tocca mangiare ora",
+            "cosa tocca ora"
+          ]
+        },
+        {
+          "name": "GetMealsForDayIntent",
+          "slots": [
+            { "name": "Date", "type": "AMAZON.DATE" },
+            { "name": "MealType", "type": "MEAL_TYPE_IT" }
+          ],
+          "samples": [
+            "cosa devo mangiare {Date}",
+            "cosa mangio {Date}",
+            "cosa c'è nel menù di {Date}",
+            "cosa devo mangiare a {MealType} {Date}",
+            "cosa mangio a {MealType} {Date}",
+            "cosa devo mangiare a {MealType}",
+            "cosa mangio a {MealType}"
+          ]
+        },
+        {
+          "name": "GetMealForPersonIntent",
+          "slots": [
+            { "name": "Person", "type": "FAMILY_MEMBER_NAME" },
+            { "name": "Date", "type": "AMAZON.DATE" },
+            { "name": "MealType", "type": "MEAL_TYPE_IT" }
+          ],
+          "samples": [
+            "cosa deve mangiare {Person}",
+            "cosa mangia {Person}",
+            "cosa mangia {Person} {Date}",
+            "cosa deve mangiare {Person} {Date}",
+            "cosa deve mangiare {Person} a {MealType}",
+            "cosa mangia {Person} a {MealType}",
+            "cosa mangia {Person} a {MealType} {Date}"
+          ]
+        },
+        {
+          "name": "GetMealForMeAndPersonIntent",
+          "slots": [
+            { "name": "Person", "type": "FAMILY_MEMBER_NAME" },
+            { "name": "Date", "type": "AMAZON.DATE" },
+            { "name": "MealType", "type": "MEAL_TYPE_IT" }
+          ],
+          "samples": [
+            "cosa mangiamo io e {Person}",
+            "che cosa dobbiamo mangiare io e {Person}",
+            "cosa mangiamo insieme a {Person}",
+            "cosa mangiamo a {MealType} io e {Person}",
+            "che cosa mangiamo a {MealType} io e {Person}",
+            "cosa mangiamo io e {Person} {Date}",
+            "cosa mangiamo a {MealType} io e {Person} {Date}"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "MEAL_TYPE_IT",
+          "values": [
+            { "id": "colazione", "name": { "value": "colazione", "synonyms": [] } },
+            {
+              "id": "spuntino_mattina",
+              "name": { "value": "spuntino della mattina", "synonyms": ["spuntino del mattino", "spuntino mattina"] }
+            },
+            { "id": "pranzo", "name": { "value": "pranzo", "synonyms": [] } },
+            {
+              "id": "spuntino_pomeriggio",
+              "name": { "value": "spuntino del pomeriggio", "synonyms": ["spuntino pomeriggio"] }
+            },
+            { "id": "cena", "name": { "value": "cena", "synonyms": [] } }
+          ]
+        },
+        {
+          "name": "FAMILY_MEMBER_NAME",
+          "values": [
+            { "id": "mamma", "name": { "value": "mamma", "synonyms": ["mia madre"] } },
+            { "id": "papa", "name": { "value": "papà", "synonyms": ["mio padre"] } },
+            { "id": "nonna", "name": { "value": "nonna", "synonyms": [] } },
+            { "id": "nonno", "name": { "value": "nonno", "synonyms": [] } },
+            { "id": "marito", "name": { "value": "marito", "synonyms": ["mio marito"] } },
+            { "id": "moglie", "name": { "value": "moglie", "synonyms": ["mia moglie"] } },
+            { "id": "generic_1", "name": { "value": "Marco", "synonyms": ["Giulia", "Anna", "Luca", "Sara"] } }
+          ]
+        }
+      ]
+    }
+  }
+}
