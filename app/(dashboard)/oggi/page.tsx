@@ -296,7 +296,7 @@ export default function OggiPage() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative flex items-center justify-center pt-2 md:pt-4 pb-3"
+        className="flex items-center justify-center pt-2 md:pt-4 pb-2"
       >
         <Image
           src="/logo.png"
@@ -304,15 +304,22 @@ export default function OggiPage() {
           width={140}
           height={35}
         />
-        {isDietCompleted && (
-          <span className="absolute right-5 flex items-center gap-1.5 rounded-xl glass-subtle px-3 py-1.5 text-xs font-semibold text-success">
+      </motion.div>
+
+      {isDietCompleted && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-center pb-1"
+        >
+          <span className="flex items-center gap-1.5 rounded-xl glass-subtle px-3 py-1.5 text-xs font-semibold text-success">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            Completata
+            Dieta completata
           </span>
-        )}
-      </motion.div>
+        </motion.div>
+      )}
 
       {familySwitcher}
 
