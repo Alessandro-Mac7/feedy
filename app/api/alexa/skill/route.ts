@@ -22,13 +22,25 @@ function buildResponse(text: string, shouldEndSession: boolean): AlexaResponseEn
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
-  const certUrl = req.headers.get("signaturecertchainurl");
-  const signature = req.headers.get("signature");
+
+  // Alexa moved from the SHA-1 era headers (SignatureCertChainUrl/Signature)
+  // to SHA-256 ones (Signature-Certificate-Chain-Url/Signature-256).
+  // Accept both so the skill works whichever pair Amazon sends.
+  const certUrl =
+    req.headers.get("signature-certificate-chain-url") ??
+    req.headers.get("signaturecertchainurl");
+  const signature =
+    req.headers.get("signature-256") ?? req.headers.get("signature");
 
   try {
-    if (!certUrl || !signature) throw new Error("missing signature headers");
+    if (!certUrl || !signature) {
+      throw new Error(
+        `missing signature headers (ricevuti: ${[...req.headers.keys()].join(", ")})`
+      );
+    }
     await alexaVerifier(certUrl, signature, rawBody);
-  } catch {
+  } catch (err) {
+    console.error("[Alexa] verifica firma fallita:", err);
     return NextResponse.json({ error: "Invalid request signature" }, { status: 400 });
   }
 
