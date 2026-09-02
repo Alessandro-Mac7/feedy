@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -33,9 +33,29 @@ const NAV_ITEMS = [
   },
 ];
 
+const ROLE_CACHE_KEY = "feedy-role";
+
+function subscribeToRoleCache() {
+  return () => {};
+}
+
+function readCachedRole(): string | null {
+  return localStorage.getItem(ROLE_CACHE_KEY);
+}
+
+function getServerRoleSnapshot(): string | null {
+  return null;
+}
+
 function NutritionistGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
+  // Paint immediately from the last known role while the real check runs below.
+  const cachedRole = useSyncExternalStore(
+    subscribeToRoleCache,
+    readCachedRole,
+    getServerRoleSnapshot
+  );
 
   useEffect(() => {
     async function check() {
@@ -44,9 +64,11 @@ function NutritionistGuard({ children }: { children: React.ReactNode }) {
         if (res.ok) {
           const data = await res.json();
           if (!data.isNutritionist) {
+            localStorage.setItem(ROLE_CACHE_KEY, "patient");
             router.replace("/oggi");
             return;
           }
+          localStorage.setItem(ROLE_CACHE_KEY, "nutritionist");
         } else {
           router.replace("/oggi");
           return;
@@ -60,7 +82,7 @@ function NutritionistGuard({ children }: { children: React.ReactNode }) {
     check();
   }, [router]);
 
-  if (!checked) {
+  if (!checked && cachedRole !== "nutritionist") {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="relative">

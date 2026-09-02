@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
-import { diets } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { diets, meals } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { createDietWithMeals } from "@/lib/db/create-diet";
 import { authUserNameSql, authUserEmailSql } from "@/lib/db/auth-users";
 import type { ParsedMeal } from "@/types";
@@ -11,6 +11,24 @@ export async function GET(req: NextRequest) {
   const session = await auth.getSession();
   if (!session?.data?.user) {
     return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
+  }
+
+  if (req.nextUrl.searchParams.get("active") === "true") {
+    const [active] = await db
+      .select()
+      .from(diets)
+      .where(and(eq(diets.userId, session.data.user.id), eq(diets.isActive, true)));
+
+    if (!active) {
+      return NextResponse.json({ diet: null, meals: [] });
+    }
+
+    const activeMeals = await db
+      .select()
+      .from(meals)
+      .where(eq(meals.dietId, active.id));
+
+    return NextResponse.json({ diet: active, meals: activeMeals });
   }
 
   const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") || "10"), 50);

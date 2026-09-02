@@ -1,6 +1,6 @@
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { CacheFirst, ExpirationPlugin, NetworkFirst, Serwist } from "serwist";
+import { CacheFirst, ExpirationPlugin, StaleWhileRevalidate, Serwist } from "serwist";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -19,12 +19,24 @@ const serwist = new Serwist({
     ...defaultCache,
     {
       matcher: /\/api\/diets/,
-      handler: new NetworkFirst({
+      handler: new StaleWhileRevalidate({
         cacheName: "api-diets",
         plugins: [
           new ExpirationPlugin({
             maxEntries: 20,
             maxAgeSeconds: 60 * 60,
+          }),
+        ],
+      }),
+    },
+    {
+      matcher: /\/api\/nutritionist\/me/,
+      handler: new StaleWhileRevalidate({
+        cacheName: "api-role",
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 1,
+            maxAgeSeconds: 24 * 60 * 60,
           }),
         ],
       }),

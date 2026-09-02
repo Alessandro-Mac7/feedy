@@ -63,20 +63,11 @@ export default function OggiPage() {
         return;
       }
 
-      const res = await fetch("/api/diets");
+      const res = await fetch("/api/diets?active=true");
       if (!res.ok) return;
 
-      const diets: Diet[] = await res.json();
-      const active = diets.find((d) => d.isActive);
-      if (!active) {
-        setDiet(null);
-        return;
-      }
-
-      const detailRes = await fetch(`/api/diets/${active.id}`);
-      if (detailRes.ok) {
-        setDiet(await detailRes.json());
-      }
+      const data: { diet: Diet | null; meals: Meal[] } = await res.json();
+      setDiet(data.diet ? { ...data.diet, meals: data.meals } : null);
     } finally {
       setLoading(false);
     }
