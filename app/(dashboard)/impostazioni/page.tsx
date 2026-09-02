@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { authClient } from "@/lib/auth/client";
+import { clearLocalAuthState } from "@/lib/auth/sign-out";
+import { clearRuntimeCaches } from "@/lib/pwa/clear-runtime-caches";
 import { useToast } from "@/components/toast";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -109,6 +111,7 @@ export default function ImpostazioniPage() {
     setSigningOut(true);
     try {
       await authClient.signOut();
+      await clearLocalAuthState();
       window.location.href = "/auth/sign-in";
     } catch {
       toast("Errore durante il logout. Riprova.", "error");
@@ -117,11 +120,8 @@ export default function ImpostazioniPage() {
   }
 
   async function handleClearCache() {
-    if ("caches" in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key)));
-      toast("Cache svuotata con successo.", "success");
-    }
+    await clearRuntimeCaches();
+    toast("Cache svuotata con successo.", "success");
   }
 
   async function handleExportData() {
@@ -153,6 +153,7 @@ export default function ImpostazioniPage() {
       const res = await fetch("/api/account", { method: "DELETE" });
       if (!res.ok) throw new Error();
       await authClient.signOut();
+      await clearLocalAuthState();
       window.location.href = "/auth/sign-in";
     } catch {
       toast("Errore nell'eliminazione dell'account.", "error");

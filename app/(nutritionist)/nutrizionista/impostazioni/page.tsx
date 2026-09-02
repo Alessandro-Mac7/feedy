@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { authClient } from "@/lib/auth/client";
+import { clearLocalAuthState } from "@/lib/auth/sign-out";
 import { useToast } from "@/components/toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -39,6 +40,7 @@ export default function NutritionistImpostazioniPage() {
     setSigningOut(true);
     try {
       await authClient.signOut();
+      await clearLocalAuthState();
       window.location.href = "/auth/sign-in";
     } catch {
       toast("Errore durante il logout. Riprova.", "error");

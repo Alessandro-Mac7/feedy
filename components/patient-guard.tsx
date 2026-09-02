@@ -2,20 +2,12 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-
-const ROLE_CACHE_KEY = "feedy-role";
-
-function subscribeToRoleCache() {
-  return () => {};
-}
-
-function readCachedRole(): string | null {
-  return localStorage.getItem(ROLE_CACHE_KEY);
-}
-
-function getServerRoleSnapshot(): string | null {
-  return null;
-}
+import {
+  readCachedRole,
+  writeCachedRole,
+  subscribeToRoleCache,
+  getServerRoleSnapshot,
+} from "@/lib/auth/role-cache";
 
 export function PatientGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -34,11 +26,11 @@ export function PatientGuard({ children }: { children: React.ReactNode }) {
         if (res.ok) {
           const data = await res.json();
           if (data.isNutritionist) {
-            localStorage.setItem(ROLE_CACHE_KEY, "nutritionist");
+            writeCachedRole("nutritionist");
             router.replace("/nutrizionista");
             return;
           }
-          localStorage.setItem(ROLE_CACHE_KEY, "patient");
+          writeCachedRole("patient");
         }
       } catch {
         // not a nutritionist, continue

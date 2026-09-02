@@ -7,6 +7,12 @@ import Image from "next/image";
 import { motion } from "motion/react";
 import { AuthGuard } from "@/components/auth-guard";
 import { cn } from "@/lib/utils";
+import {
+  readCachedRole,
+  writeCachedRole,
+  subscribeToRoleCache,
+  getServerRoleSnapshot,
+} from "@/lib/auth/role-cache";
 
 const NAV_ITEMS = [
   {
@@ -33,20 +39,6 @@ const NAV_ITEMS = [
   },
 ];
 
-const ROLE_CACHE_KEY = "feedy-role";
-
-function subscribeToRoleCache() {
-  return () => {};
-}
-
-function readCachedRole(): string | null {
-  return localStorage.getItem(ROLE_CACHE_KEY);
-}
-
-function getServerRoleSnapshot(): string | null {
-  return null;
-}
-
 function NutritionistGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
@@ -64,11 +56,11 @@ function NutritionistGuard({ children }: { children: React.ReactNode }) {
         if (res.ok) {
           const data = await res.json();
           if (!data.isNutritionist) {
-            localStorage.setItem(ROLE_CACHE_KEY, "patient");
+            writeCachedRole("patient");
             router.replace("/oggi");
             return;
           }
-          localStorage.setItem(ROLE_CACHE_KEY, "nutritionist");
+          writeCachedRole("nutritionist");
         } else {
           router.replace("/oggi");
           return;
